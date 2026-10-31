@@ -141,6 +141,18 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 .xo-stagger-in{animation:xoFadeUp .55s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--xo-delay,0ms)}
 @media(prefers-reduced-motion:reduce){#xo-intro{display:none}.xo-icon-pop,.xo-stagger-in{animation:none!important}}
 
+
+/* Visitor accounts for AI assistant */
+.ai-auth{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0 18px}
+.ai-auth .auth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.ai-auth input{width:100%;min-width:0}
+.ai-auth .auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ai-auth .auth-actions button{border:0;border-radius:10px;padding:10px 14px;font:700 14px Rubik;cursor:pointer;background:var(--pop);color:var(--popink)}
+.ai-auth .auth-actions button.secondary{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.ai-auth .auth-status{font-size:14px;color:var(--muted);margin-top:8px;white-space:pre-line}
+.ai-auth .auth-user{font-weight:700;color:var(--pop);margin-top:8px}
+#aiRemaining{font-weight:700;color:var(--pop);margin:8px 0}
+
 </style>
 </head>
 <body>
@@ -185,7 +197,24 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 
 <section id="community"><h2>العب وشارك 🎮</h2><p class="sub">أدوات ممتعة لتنظيم اللعب والتحديات مع أصحابك.</p>
 <div class="toolgrid">
- <div class="toolcard"><h3>🤖 مساعد X/O الذكي</h3><p class="sub">ساعدك ترتب خطة لعب وتقسم الفرق بشكل عادل.</p><label>اللعبة<select id="aiGame"><option>EA SPORTS FC</option><option>UFC</option><option>Tekken</option><option>لعبة جماعية أخرى</option></select></label><label>عدد اللاعبين<input id="aiCount" type="number" min="2" max="20" value="4"></label><label>أسماء اللاعبين (كل اسم في سطر)<textarea id="aiNames" rows="3" placeholder="أحمد&#10;عمر&#10;يوسف&#10;محمود"></textarea></label><label>نوع المساعدة<select id="aiTask"><option value="teams">توزيع فرق عشوائية</option><option value="fc">اختيار فرق FC عشوائية</option><option value="plan">خطة جلسة لعب</option><option value="rules">اقتراح قوانين تحدي</option></select></label><label>عدد الماتشات<input id="aiMatches" type="number" min="1" max="10" value="3"></label><label>مستوى الفرق<select id="aiLevel"><option value="high">مستوى عالي</option><option value="normal">مستوى عادي</option><option value="mixed">متنوع</option></select></label><button class="toolbtn" id="aiGo">ساعدني ✨</button><label>اسأل AI سؤال حر<textarea id="aiQuestion" rows="3" placeholder="اكتب سؤالك هنا"></textarea></label><button class="toolbtn" id="aiAsk">اسأل المساعد</button><div class="toolresult" id="aiAnswer">المساعد التجريبي جاهز لاستقبال سؤالك.</div><div class="toolresult" id="aiResult">اكتب أسماء أصحابك واختار المساعدة.</div></div>
+ <div class="toolcard"><h3>🤖 مساعد X/O الذكي</h3>
+ <div class="ai-auth" id="aiAuthPanel">
+  <b>حسابك في X/O</b>
+  <p class="sub" style="margin:4px 0 12px">سجّل أو أنشئ حساب علشان تستخدم المساعد وتحصل على 10 رسائل كل ساعة.</p>
+  <div class="auth-grid">
+   <label>البريد الإلكتروني<input id="aiAuthEmail" type="email" autocomplete="email" placeholder="name@example.com"></label>
+   <label>كلمة المرور<input id="aiAuthPassword" type="password" autocomplete="current-password" minlength="6" placeholder="6 أحرف على الأقل"></label>
+  </div>
+  <div class="auth-actions">
+   <button type="button" id="aiSignUp">إنشاء حساب</button>
+   <button type="button" id="aiSignIn">تسجيل الدخول</button>
+   <button type="button" class="secondary" id="aiGoogleSignIn">الدخول باستخدام Google</button>
+   <button type="button" class="secondary" id="aiSignOut" hidden>تسجيل الخروج</button>
+  </div>
+  <div class="auth-user" id="aiAuthUser"></div>
+  <div class="auth-status" id="aiAuthStatus" aria-live="polite">سجّل دخولك علشان تبدأ استخدام المساعد.</div>
+  <div id="aiRemaining">المتبقي: — / 10 رسائل</div>
+ </div><p class="sub">ساعدك ترتب خطة لعب وتقسم الفرق بشكل عادل.</p><label>اللعبة<select id="aiGame"><option>EA SPORTS FC</option><option>UFC</option><option>Tekken</option><option>لعبة جماعية أخرى</option></select></label><label>عدد اللاعبين<input id="aiCount" type="number" min="2" max="20" value="4"></label><label>أسماء اللاعبين (كل اسم في سطر)<textarea id="aiNames" rows="3" placeholder="أحمد&#10;عمر&#10;يوسف&#10;محمود"></textarea></label><label>نوع المساعدة<select id="aiTask"><option value="teams">توزيع فرق عشوائية</option><option value="fc">اختيار فرق FC عشوائية</option><option value="plan">خطة جلسة لعب</option><option value="rules">اقتراح قوانين تحدي</option></select></label><label>عدد الماتشات<input id="aiMatches" type="number" min="1" max="10" value="3"></label><label>مستوى الفرق<select id="aiLevel"><option value="high">مستوى عالي</option><option value="normal">مستوى عادي</option><option value="mixed">متنوع</option></select></label><button class="toolbtn" id="aiGo">ساعدني ✨</button><label>اسأل AI سؤال حر<textarea id="aiQuestion" rows="3" placeholder="اكتب سؤالك هنا"></textarea></label><button class="toolbtn" id="aiAsk">اسأل المساعد</button><div class="toolresult" id="aiAnswer">المساعد التجريبي جاهز لاستقبال سؤالك.</div><div class="toolresult" id="aiResult">اكتب أسماء أصحابك واختار المساعدة.</div></div>
  <div class="toolcard"><h3>🎡 عجلة الحظ لتقسيم الفرق</h3><p class="sub">ضيف أسماء اللاعبين ولف العجلة لاختيار لاعب عشوائي.</p><label>أسماء اللاعبين (كل اسم في سطر)<textarea id="wheelNames" rows="3" placeholder="أحمد&#10;عمر&#10;يوسف&#10;محمود"></textarea></label><div class="wheelwrap"><div class="pointer">▼</div><canvas class="wheel" id="wheel" width="600" height="600" aria-label="عجلة أسماء اللاعبين"></canvas><button class="toolbtn" id="spin">لف العجلة!</button><div class="toolresult" id="wheelResult">مين هيكون الاختيار الأول؟</div></div></div>
 </div></section>
 <section id="tournaments"><h2>🏆 بطولات X/O</h2><p class="sub">شارك في البطولات والتحديات القادمة.</p><div id="publicTournaments"><p class="sub">مفيش بطولات معلنة حاليًا. تابعنا قريبًا!</p></div></section>
@@ -315,7 +344,47 @@ function showTournaments(){var ts=window.xoCustomerCloud.state.tournaments||[],b
 $('publicTournaments').addEventListener('click',async function(e){var b=e.target.closest('.registerTour');if(!b)return;var c=b.closest('.tourcard'),nm=c.querySelector('.regname').value.trim(),ph=c.querySelector('.regphone').value.trim();if(!nm||!ph){c.querySelector('.regmsg').textContent='اكتب الاسم ورقم الموبايل';return}b.disabled=true;try{await window.xoCustomerCloud.registerTournament(b.dataset.id,nm,ph);c.querySelector('.regmsg').textContent='تم التسجيل بنجاح';}catch(err){console.error(err);c.querySelector('.regmsg').textContent='تعذر التسجيل. قد يكون العدد اكتمل أو الرقم مسجل بالفعل.'}finally{b.disabled=false}});
 function safeText(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').value,game=$('aiGame').value,n=Math.max(2,Number($('aiCount').value)||4),out='';if(task==='fc'){var hi=['ريال مدريد','مانشستر سيتي','بايرن ميونخ','باريس سان جيرمان','ليفربول','برشلونة','أرسنال','إنتر ميلان'],no=['أستون فيلا','نيوكاسل','لاتسيو','روما','إشبيلية','أياكس','بورتو','مارسيليا'],lv=$('aiLevel').value,count=Math.min(10,Math.max(1,Number($('aiMatches').value)||3));out='🎮 '+game+'\n';for(var i=1;i<=count;i++){var pool=(lv==='high'?hi:lv==='normal'?no:hi.concat(no)).slice().sort(function(){return Math.random()-.5});out+='الماتش '+i+': '+pool[0]+' ضد '+pool[1]+'\n'}}else if(task==='teams'){if(names.length<2)out='اكتب اسم لاعبين على الأقل.';else{names.sort(function(){return Math.random()-.5});var t=[[],[]];names.forEach(function(x,i){t[i%2].push(x)});out='الفريق الأول: '+t[0].join('، ')+'\nالفريق الثاني: '+t[1].join('، ')}}else if(task==='plan')out='خطة لعب لـ '+game+' وعدد '+n+' لاعبين: إحماء، مباريات قصيرة، تسجيل النتائج، ثم نهائي.';else out='اتفقوا على مدة المباراة، قواعد التعادل، واللعب النظيف.';$('aiResult').textContent=out};
-$('aiAsk').onclick=async function(){var question=$('aiQuestion').value.trim(),answer=$('aiAnswer'),button=$('aiAsk');if(!question){answer.textContent='اكتب سؤالك الأول.';return}button.disabled=true;button.textContent='جاري التفكير...';answer.textContent='ثواني وبجهزلك الرد 🤖';try{var response=await fetch(window.XO_SUPABASE_URL+'/functions/v1/ai-chat',{method:'POST',headers:{'Content-Type':'application/json','apikey':window.XO_SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify({question:question})});var data=await response.json().catch(function(){return {}});if(!response.ok)throw new Error(data.error||'تعذر الحصول على رد');answer.textContent=data.answer||'لم يصل رد. حاول مرة أخرى.'}catch(err){answer.textContent=err.message||'حصلت مشكلة في الاتصال. حاول مرة أخرى.'}finally{button.disabled=false;button.textContent='اسأل AI'}};
+
+// X/O visitor accounts (Supabase Auth)
+(function initAiAccounts(){
+ var sb=window.xoSupabase, status=$('aiAuthStatus'), userBox=$('aiAuthUser'), remaining=$('aiRemaining');
+ function authMessage(t){status.textContent=t}
+ function setRemaining(n){remaining.textContent=Number.isFinite(Number(n))?'المتبقي: '+Number(n)+' / 10 رسائل':'المتبقي: — / 10 رسائل'}
+ function updateAuth(user){
+  var logged=!!user;
+  $('aiSignOut').hidden=!logged;
+  $('aiSignUp').hidden=logged;
+  $('aiSignIn').hidden=logged;
+  $('aiGoogleSignIn').hidden=logged;
+  $('aiAuthEmail').disabled=logged;
+  $('aiAuthPassword').disabled=logged;
+  userBox.textContent=logged?'تم تسجيل الدخول: '+(user.email||'حسابك'):'';
+  if(!logged){authMessage('سجّل دخولك علشان تبدأ استخدام المساعد.');setRemaining(null)}
+ }
+ $('aiSignUp').onclick=async function(){
+  var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
+  if(!email||password.length<6){authMessage('اكتب بريد إلكتروني صحيح وكلمة مرور من 6 أحرف على الأقل.');return}
+  this.disabled=true;
+  try{var r=await sb.auth.signUp({email:email,password:password,options:{emailRedirectTo:location.origin+location.pathname}});if(r.error)throw r.error;authMessage(r.data.session?'تم إنشاء الحساب وتسجيل الدخول بنجاح.':'تم إنشاء الحساب. راجع بريدك الإلكتروني واضغط رابط التأكيد، وبعدها سجّل الدخول.')}
+  catch(e){authMessage(e.message||'تعذر إنشاء الحساب. حاول مرة أخرى.')}finally{this.disabled=false}
+ };
+ $('aiSignIn').onclick=async function(){
+  var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
+  if(!email||!password){authMessage('اكتب البريد الإلكتروني وكلمة المرور.');return}
+  this.disabled=true;
+  try{var r=await sb.auth.signInWithPassword({email:email,password:password});if(r.error)throw r.error;authMessage('أهلًا بيك! حسابك جاهز.')}
+  catch(e){authMessage(e.message||'تعذر تسجيل الدخول. راجع البيانات أو أكد بريدك الإلكتروني.')}finally{this.disabled=false}
+ };
+ $('aiGoogleSignIn').onclick=async function(){
+  this.disabled=true;
+  try{var r=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(r.error)throw r.error}
+  catch(e){authMessage(e.message||'تعذر تسجيل الدخول باستخدام Google.')}finally{this.disabled=false}
+ };
+ $('aiSignOut').onclick=async function(){var r=await sb.auth.signOut();if(r.error)authMessage(r.error.message);else{updateAuth(null);authMessage('تم تسجيل الخروج.')}};
+ sb.auth.onAuthStateChange(function(event,session){updateAuth(session&&session.user);if(session&&session.user&&event==='SIGNED_IN')authMessage('أهلًا بيك! تقدر تستخدم 10 رسائل كل ساعة.')});
+ sb.auth.getSession().then(function(r){updateAuth(r.data&&r.data.session&&r.data.session.user)});
+})();
+$('aiAsk').onclick=async function(){var question=$('aiQuestion').value.trim(),answer=$('aiAnswer'),button=$('aiAsk');if(!question){answer.textContent='اكتب سؤالك الأول.';return}var sessionResult=await window.xoSupabase.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;if(!session){answer.textContent='سجّل دخولك أو أنشئ حساب الأول علشان تستخدم المساعد.';$('aiAuthEmail').focus();return}button.disabled=true;button.textContent='جاري التفكير...';answer.textContent='ثواني وبجهزلك الرد 🤖';try{var response=await fetch(window.XO_SUPABASE_URL+'/functions/v1/ai-chat',{method:'POST',headers:{'Content-Type':'application/json','apikey':window.XO_SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({question:question})});var data=await response.json().catch(function(){return {}});if(!response.ok)throw new Error(data.error||'تعذر الحصول على رد');answer.textContent=data.answer||'لم يصل رد. حاول مرة أخرى.';$('aiRemaining').textContent='المتبقي: '+Number(data.remaining)+' / 10 رسائل'}catch(err){answer.textContent=err.message||'حصلت مشكلة في الاتصال. حاول مرة أخرى.'}finally{button.disabled=false;button.textContent='اسأل AI'}};
 var wheelRotation=0,wheelPalette=['#ff5a6e','#6f9bff','#2ee6b8','#ffcf5a','#b58cff','#ff925a','#55c9d8','#e879c5'];function drawWheel(){var names=playerNames('wheelNames'),cv=$("wheel"),ctx=cv.getContext('2d'),cx=300,cy=300,r=286;ctx.clearRect(0,0,600,600);if(!names.length){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='#2ee6b8';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.fillText('اكتب الأسماء',cx,cy);return}var step=Math.PI*2/names.length;names.forEach(function(name,i){var a=-Math.PI/2+i*step;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+step);ctx.closePath();ctx.fillStyle=wheelPalette[i%wheelPalette.length];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);ctx.textAlign='right';ctx.fillStyle='#102b2a';ctx.font='bold '+(names.length>12?'19':'25')+'px sans-serif';var label=name.length>18?name.slice(0,17)+'…':name;ctx.fillText(label,r-24,8);ctx.restore()});ctx.beginPath();ctx.arc(cx,cy,42,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('X/O',cx,cy)}$("wheelNames").addEventListener('input',drawWheel);drawWheel();$("spin").onclick=function(){var names=playerNames('wheelNames');if(!names.length){$("wheelResult").textContent='اكتب أسماء اللاعبين الأول.';return}var winner=names[Math.floor(Math.random()*names.length)];wheelRotation+=1440+Math.random()*720;$("wheel").style.transform='rotate('+wheelRotation+'deg)';$("wheelResult").textContent='🎉 الاختيار وقع على: '+winner};
 showTournaments();window.addEventListener('xo-cloud-ready',function(){refreshPaymentDetails();showTournaments()});
 
