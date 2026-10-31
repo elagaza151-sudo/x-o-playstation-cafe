@@ -177,7 +177,7 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
     <h1 id="siteAuthTitle">أهلاً بيك في X/O</h1>
     <p>سجّل الدخول أو أنشئ حساب علشان تدخل الموقع وتحجز وتطلب وتستمتع بكل الخدمات.</p>
     <div id="siteAuthSlot"></div>
-    <small>تسجيل الدخول مطلوب للوصول إلى جميع أقسام الموقع.</small>
+    <button type="button" id="siteSkipLogin" class="secondary" style="margin-top:16px;width:100%;padding:12px;border:1px solid rgba(255,255,255,.25);border-radius:12px;background:transparent;color:#F3F7F5;font:700 15px Rubik;cursor:pointer">تخطي وتصفح الموقع بدون AI</button><small>تقدر تتصفح الموقع بدون حساب، لكن المساعد الذكي يحتاج تسجيل الدخول.</small>
   </div>
 </div>
 
@@ -367,11 +367,11 @@ function playerNames(id){return $(id).value.split(/\n|,/).map(function(x){return
 function showTournaments(){var ts=window.xoCustomerCloud.state.tournaments||[],box=$("publicTournaments");if(!ts.length){box.innerHTML='<p class="sub">مفيش بطولات معلنة حاليًا. تابعنا قريبًا!</p>';return}box.innerHTML=ts.map(function(t){return '<article class="tourcard"><h3>🏆 '+safeText(t.name)+'</h3><p>'+safeText(t.game||'')+' · '+safeText(t.tournament_date||'')+'</p><p>'+safeText(t.rules||'')+'</p><b>الجائزة: '+safeText(t.prize||'يتم الإعلان عنها')+'</b><p>طريقة اللعب: '+safeText(t.format||'')+'</p><p>'+safeText(t.details||'')+'</p><label>اسمك<input class="regname" placeholder="الاسم"></label><label>رقم الموبايل<input class="regphone" placeholder="رقم التواصل"></label><button class="toolbtn registerTour" data-id="'+safeText(t.id)+'">سجل في البطولة</button><small class="regmsg"></small></article>'}).join('')}
 $('publicTournaments').addEventListener('click',async function(e){var b=e.target.closest('.registerTour');if(!b)return;var c=b.closest('.tourcard'),nm=c.querySelector('.regname').value.trim(),ph=c.querySelector('.regphone').value.trim();if(!nm||!ph){c.querySelector('.regmsg').textContent='اكتب الاسم ورقم الموبايل';return}b.disabled=true;try{await window.xoCustomerCloud.registerTournament(b.dataset.id,nm,ph);c.querySelector('.regmsg').textContent='تم التسجيل بنجاح';}catch(err){console.error(err);c.querySelector('.regmsg').textContent='تعذر التسجيل. قد يكون العدد اكتمل أو الرقم مسجل بالفعل.'}finally{b.disabled=false}});
 function safeText(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-$("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').value,game=$('aiGame').value,n=Math.max(2,Number($('aiCount').value)||4),out='';if(task==='fc'){var hi=['ريال مدريد','مانشستر سيتي','بايرن ميونخ','باريس سان جيرمان','ليفربول','برشلونة','أرسنال','إنتر ميلان'],no=['أستون فيلا','نيوكاسل','لاتسيو','روما','إشبيلية','أياكس','بورتو','مارسيليا'],lv=$('aiLevel').value,count=Math.min(10,Math.max(1,Number($('aiMatches').value)||3));out='🎮 '+game+'\n';for(var i=1;i<=count;i++){var pool=(lv==='high'?hi:lv==='normal'?no:hi.concat(no)).slice().sort(function(){return Math.random()-.5});out+='الماتش '+i+': '+pool[0]+' ضد '+pool[1]+'\n'}}else if(task==='teams'){if(names.length<2)out='اكتب اسم لاعبين على الأقل.';else{names.sort(function(){return Math.random()-.5});var t=[[],[]];names.forEach(function(x,i){t[i%2].push(x)});out='الفريق الأول: '+t[0].join('، ')+'\nالفريق الثاني: '+t[1].join('، ')}}else if(task==='plan')out='خطة لعب لـ '+game+' وعدد '+n+' لاعبين: إحماء، مباريات قصيرة، تسجيل النتائج، ثم نهائي.';else out='اتفقوا على مدة المباراة، قواعد التعادل، واللعب النظيف.';$('aiResult').textContent=out};
+$("aiGo").onclick=async function(){var authState=await window.xoSupabase.auth.getSession(),activeSession=authState.data&&authState.data.session;if(!activeSession){$('aiResult').textContent='ميزة المساعد الذكي متاحة بعد تسجيل الدخول فقط. سجّل من هنا بالأعلى.';$('aiAuthEmail').focus();return}var names=playerNames('aiNames'),task=$('aiTask').value,game=$('aiGame').value,n=Math.max(2,Number($('aiCount').value)||4),out='';if(task==='fc'){var hi=['ريال مدريد','مانشستر سيتي','بايرن ميونخ','باريس سان جيرمان','ليفربول','برشلونة','أرسنال','إنتر ميلان'],no=['أستون فيلا','نيوكاسل','لاتسيو','روما','إشبيلية','أياكس','بورتو','مارسيليا'],lv=$('aiLevel').value,count=Math.min(10,Math.max(1,Number($('aiMatches').value)||3));out='🎮 '+game+'\n';for(var i=1;i<=count;i++){var pool=(lv==='high'?hi:lv==='normal'?no:hi.concat(no)).slice().sort(function(){return Math.random()-.5});out+='الماتش '+i+': '+pool[0]+' ضد '+pool[1]+'\n'}}else if(task==='teams'){if(names.length<2)out='اكتب اسم لاعبين على الأقل.';else{names.sort(function(){return Math.random()-.5});var t=[[],[]];names.forEach(function(x,i){t[i%2].push(x)});out='الفريق الأول: '+t[0].join('، ')+'\nالفريق الثاني: '+t[1].join('، ')}}else if(task==='plan')out='خطة لعب لـ '+game+' وعدد '+n+' لاعبين: إحماء، مباريات قصيرة، تسجيل النتائج، ثم نهائي.';else out='اتفقوا على مدة المباراة، قواعد التعادل، واللعب النظيف.';$('aiResult').textContent=out};
 
 // X/O visitor accounts (Supabase Auth)
 (function initAiAccounts(){
- var sb=window.xoSupabase, status=$('aiAuthStatus'), userBox=$('aiAuthUser'), remaining=$('aiRemaining');
+ var sb=window.xoSupabase, status=$('aiAuthStatus'), userBox=$('aiAuthUser'), remaining=$('aiRemaining'), gateDismissed=false;
  function authMessage(t){status.textContent=t}
  function setRemaining(n){remaining.textContent=Number.isFinite(Number(n))?'المتبقي: '+Number(n)+' / 10 رسائل':'المتبقي: — / 10 رسائل'}
  function updateAuth(user){
@@ -382,8 +382,8 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
    if(site)site.inert=false;
   }else{
    if(slot && panel && panel.parentNode!==slot) slot.appendChild(panel);
-   gate.hidden=false;
-   if(site)site.inert=true;
+   gate.hidden=gateDismissed;
+   if(site)site.inert=!gateDismissed;
   }
   $('aiSignOut').hidden=!logged;
   $('aiSignUp').hidden=logged;
@@ -394,6 +394,7 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
   userBox.textContent=logged?'تم تسجيل الدخول: '+(user.email||'حسابك'):'';
   if(!logged){authMessage('سجّل دخولك علشان تدخل الموقع.');setRemaining(null)}
  }
+ $('siteSkipLogin').onclick=function(){gateDismissed=true;if(placeholder && panel)placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);gate.hidden=true;var site=document.querySelector('.layer');if(site)site.inert=false;authMessage('أنت بتتصفح كزائر. سجّل الدخول من قسم المساعد لاستخدام ميزات AI.');};
  $('aiSignUp').onclick=async function(){
   var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
   if(!email||password.length<6){authMessage('اكتب بريد إلكتروني صحيح وكلمة مرور من 6 أحرف على الأقل.');return}
