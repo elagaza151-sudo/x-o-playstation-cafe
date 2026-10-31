@@ -195,6 +195,7 @@ function vBk(){
  if(!L.length)h+="<tr><td colspan='11' class='muted'>مفيش حجوزات. سجل أول حجز من النموذج فوق.</td></tr>";
  L.forEach(function(b){var r=room(b.r),old=b.d<today(),total=Number(b.total||((r?r.rate:0)*b.h)),dep=Number(b.deposit||0),pm={cash:"نقدي",instapay:"InstaPay",bank:"تحويل بنكي",wallet:"محفظة إلكترونية",card:"فيزا"}[b.paymentMethod]||"—";
   h+="<tr style='"+(old?"opacity:.5":"")+"'><td>"+b.d+"</td><td>"+b.tm+"</td><td>"+(r?esc(r.n):"-")+"</td><td>"+esc(b.n)+"<div class='muted'>"+esc(b.ph)+"</div></td><td>"+b.h+" س</td><td>"+money(total)+" ج</td><td>"+money(dep)+" ج</td><td>"+money(Math.max(0,total-dep))+" ج</td><td>"+pm+(b.paymentRef?"<div class='muted'>"+esc(b.paymentRef)+"</div>":"")+"</td><td>"+esc(b.createdBy||"")+" / "+esc(b.createdShift||"")+"</td><td class='row'>"+(b.d==today()&&r&&!r.ss?"<button class='btn s' data-a='bkgo' data-b='"+b.id+"'>ابدأ</button>":"")+"<button class='btn r s' data-a='bkdel' data-b='"+b.id+"'>حذف</button></td></tr>"});
+ updateBookingEstimate();
  return h+"</table></div>";
 }
 function toggleBookingRef(){var p=$("bpm"),w=$("brefwrap");if(p&&w)w.style.display=p.value==="cash"?"none":"grid"}
