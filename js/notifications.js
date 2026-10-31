@@ -1,11 +1,21 @@
 (function(){
-  var KEY=document.getElementById('main')?'xo_manager_notifications_v1':'xo_customer_notifications_v1', seenTimers={};
+  var KEY=document.getElementById('main')?'xo_manager_notifications_v1':'xo_customer_notifications_v1', seenTimers={}, audioCtx=null;
   function read(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
   function write(items){try{localStorage.setItem(KEY,JSON.stringify(items.slice(0,80)))}catch(e){}}
   function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function soundEnabled(){return localStorage.getItem('xo_notification_sound')!=='off'}
+  function playSound(type){
+    if(!soundEnabled())return;
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+      if(!audioCtx)audioCtx=new AC();if(audioCtx.state==='suspended')audioCtx.resume();
+      var now=audioCtx.currentTime,notes=type==='booking'?[660,880,1046]:type==='order'?[880,660,880]:[523,659,784];
+      notes.forEach(function(freq,i){var osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),start=now+i*.13;osc.type='sine';osc.frequency.setValueAtTime(freq,start);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.12,start+.025);gain.gain.exponentialRampToValueAtTime(.0001,start+.20);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(start);osc.stop(start+.22)});
+    }catch(e){}
+  }
   function notify(title,body,type){
     var items=read(),item={id:Date.now()+'_'+Math.random().toString(36).slice(2),title:title,body:body||'',type:type||'info',at:new Date().toISOString(),read:false};
-    items.unshift(item);write(items);render();toast(title+(body?' — '+body:''));
+    items.unshift(item);write(items);render();toast(title+(body?' — '+body:''));playSound(type||'info');
     if('Notification'in window&&Notification.permission==='granted'){
       try{new Notification(title,{body:body||'',tag:item.id})}catch(e){}
     }
@@ -22,9 +32,11 @@
     if(!host)return;
     var items=read(),unread=items.filter(function(x){return!x.read}).length;
     host.innerHTML='<button type="button" id="xoNotifyBell" aria-label="الإشعارات">🔔 <b>'+unread+'</b></button><section id="xoNotifyPanel" hidden><header><strong>الإشعارات</strong><button type="button" id="xoNotifyReadAll">قراءة الكل</button></header><div class="xoNotifyList">'+(items.length?items.map(function(x){return '<article class="'+(x.read?'read':'')+'"><b>'+escapeHtml(x.title)+'</b><p>'+escapeHtml(x.body)+'</p><small>'+new Date(x.at).toLocaleString('ar-EG')+'</small></article>'}).join(''):'<p class="empty">لا توجد إشعارات حتى الآن</p>')+'</div><footer><button type="button" id="xoNotifyEnable">تفعيل تنبيهات الجهاز</button><button type="button" id="xoNotifyClear">مسح الإشعارات</button></footer></section>';
-    document.getElementById('xoNotifyBell').onclick=function(){var p=document.getElementById('xoNotifyPanel');p.hidden=!p.hidden};
+    document.getElementById('xoNotifyBell').onclick=function(){if(window.AudioContext||window.webkitAudioContext){try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}var p=document.getElementById('xoNotifyPanel');p.hidden=!p.hidden};
     document.getElementById('xoNotifyReadAll').onclick=function(){write(read().map(function(x){x.read=true;return x}));render()};
     document.getElementById('xoNotifyClear').onclick=function(){write([]);render()};
+    document.getElementById('xoNotifySound').onclick=function(){localStorage.setItem('xo_notification_sound',soundEnabled()?'off':'on');render()};
+    document.getElementById('xoNotifyTestSound').onclick=function(){playSound('booking');toast('دي نغمة تجريبية للإشعارات')};
     document.getElementById('xoNotifyEnable').onclick=function(){if(!('Notification'in window)){toast('المتصفح لا يدعم إشعارات الجهاز');return}Notification.requestPermission().then(function(p){toast(p==='granted'?'تم تفعيل إشعارات الجهاز':'لم يتم السماح بالإشعارات')})};
   }
   function addHost(){
