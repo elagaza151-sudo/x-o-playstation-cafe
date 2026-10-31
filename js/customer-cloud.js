@@ -3,6 +3,16 @@
   window.xoSupabase = sb;
   const $ = id => document.getElementById(id);
   const state = { payment: { depositPercent: 30 }, catalog: null, tournaments: [] };
+  function saveTracking(kind, id, token) {
+    if (!id || !token) return;
+    const key = 'xo_my_' + (kind === 'booking' ? 'bookings' : 'orders') + '_v1';
+    const ids = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!ids.includes(id)) localStorage.setItem(key, JSON.stringify([id, ...ids].slice(0, 30)));
+    const tokenKey = 'xo_tracking_tokens_v1';
+    const tokens = JSON.parse(localStorage.getItem(tokenKey) || '{}');
+    tokens[id] = token;
+    localStorage.setItem(tokenKey, JSON.stringify(tokens));
+  }
   async function submitPublic(payload) {
     const response = await fetch(window.XO_SUPABASE_URL + '/functions/v1/customer-api', {
       method: 'POST',
@@ -30,8 +40,7 @@
     async createBooking(payload) {
       const result = await submitPublic({ action: 'booking', ...payload });
       if (result.id) {
-        const ids = JSON.parse(localStorage.getItem('xo_my_bookings_v1') || '[]');
-        if (!ids.includes(result.id)) localStorage.setItem('xo_my_bookings_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        saveTracking('booking', result.id, result.trackingToken);
         localStorage.setItem('xo_last_booking_status_' + result.id, 'pending');
       }
       return result;
@@ -39,14 +48,14 @@
     async createOrder(payload) {
       const result = await submitPublic({ action: 'order', ...payload });
       if (result.id) {
-        const ids = JSON.parse(localStorage.getItem('xo_my_orders_v1') || '[]');
-        if (!ids.includes(result.id)) localStorage.setItem('xo_my_orders_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        saveTracking('order', result.id, result.trackingToken);
         localStorage.setItem('xo_last_order_status_' + result.id, 'new');
       }
       return result;
     },
     async getStatus(kind, id) {
-      return submitPublic({ action: 'status', kind, id });
+      const tokens = JSON.parse(localStorage.getItem('xo_tracking_tokens_v1') || '{}');
+      return submitPublic({ action: 'status', kind, id, trackingToken: tokens[id] || '' });
     },
     async registerTournament(id, name, phone) {
       return submitPublic({ action: 'register', tournamentId: id, name, phone });
