@@ -161,7 +161,7 @@ var currentUser=null;
 function activeShift(){return currentUser?(currentUser.role==="مدير"?"الإدارة":(currentUser.shift||"شيفت 1")):"غير محدد"}
 function loginView(){
  $("nav").style.display="none";
- $("main").innerHTML="<div class='card' style='max-width:440px;margin:8vh auto'><div class='logo' style='text-align:center;margin-bottom:12px'>x<i>/</i>o</div><h2 style='text-align:center'>تسجيل الدخول</h2><p class='muted' style='text-align:center'>سجل ببريدك الإلكتروني وكلمة المرور المخصصة لك</p><div class='form' style='grid-template-columns:1fr'><label>البريد الإلكتروني<input id='loginEmail' type='email' autocomplete='username' placeholder='name@example.com'></label><label>كلمة المرور<input id='loginPass' type='password' autocomplete='current-password'></label><button class='btn' data-a='login'>دخول</button><p class='muted'>الحسابات تُدار من Supabase Auth، ولا توجد كلمات مرور افتراضية داخل الموقع.</p></div></div>";
+ $("main").innerHTML="<div class='card' style='max-width:440px;margin:8vh auto'><div class='logo' style='text-align:center;margin-bottom:12px'>x<i>/</i>o</div><h2 style='text-align:center'>تسجيل الدخول</h2><p class='muted' style='text-align:center'>سجل باسم المستخدم وكلمة المرور المخصصة لك</p><div class='form' style='grid-template-columns:1fr'><label>اسم المستخدم<input id='loginUsername' type='text' autocomplete='username' autocapitalize='none' spellcheck='false' placeholder='admin أو shift1'></label><label>كلمة المرور<input id='loginPass' type='password' autocomplete='current-password'></label><button class='btn' data-a='login'>دخول</button><p class='muted'>الحسابات تُدار من Supabase Auth، ولا توجد كلمات مرور افتراضية داخل الموقع.</p></div></div>";
 }
 function id(){return S.nid++}
 function room(i){return S.rooms.filter(function(r){return r.id==i})[0]}
@@ -267,8 +267,8 @@ async function act(a,d){
 
  if(a=="mgrcred"||a=="accadd"||a=="accdel"){toast("إدارة الحسابات تتم من Supabase Auth حسب دليل SETUP.md");return}
  if(a=="login"){
- var email=$("loginEmail").value.trim(),pass=$("loginPass").value;
- try{var p=await window.xoManagerCloud.login(email,pass);currentUser={id:p.user_id,user:p.display_name,role:p.role==="manager"?"مدير":"عامل",shift:p.shift_name||"شيفت 1"};await window.xoManagerCloud.refresh();view="rooms";render();toast("أهلًا "+p.display_name)}catch(e){toast(e.message||"فشل تسجيل الدخول")}return
+ var username=$("loginUsername").value.trim(),pass=$("loginPass").value;
+ try{var p=await window.xoManagerCloud.login(username,pass);currentUser={id:p.user_id,user:p.display_name,role:p.role==="manager"?"مدير":"عامل",shift:p.shift_name||"شيفت 1"};await window.xoManagerCloud.refresh();view="rooms";render();toast("أهلًا "+p.display_name)}catch(e){toast(e.message||"فشل تسجيل الدخول")}return
  }
  if(a=="logout"){await window.xoManagerCloud.logout();currentUser=null;view="rooms";render();return}
  if(a=="tab"){if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(d.v)>=0){toast("الصلاحية دي للمدير فقط");return}view=d.v;render();return}
