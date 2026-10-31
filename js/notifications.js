@@ -1,5 +1,5 @@
 (function(){
-  var KEY='xo_notifications_v1', seenTimers={};
+  var KEY=document.getElementById('main')?'xo_manager_notifications_v1':'xo_customer_notifications_v1', seenTimers={};
   function read(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
   function write(items){try{localStorage.setItem(KEY,JSON.stringify(items.slice(0,80)))}catch(e){}}
   function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -35,11 +35,16 @@
   function isManager(){return !!document.getElementById('main')}
   function managerRealtime(){
     var sb=window.xoSupabase;if(!sb||!isManager())return;
-    sb.channel('xo-notification-feed')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'bookings'},function(p){var b=p.new||{};notify('طلب حجز جديد',(b.customer_name||'عميل')+' — '+(b.room_name||'')+'، '+(b.booking_date||'')+' '+String(b.booking_time||'').slice(0,5),'booking')})
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bookings'},function(p){var b=p.new||{},old=p.old||{};if(b.status!==old.status)notify('تغيير حالة الحجز',(b.customer_name||'')+' — '+(b.status==='confirmed'?'تم تأكيد الحجز':b.status==='rejected'?'تم رفض الحجز':'تحديث الحالة'),'booking')})
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'cafe_orders'},function(p){var o=p.new||{};notify('طلب كافيتريا جديد',(o.room_name||'بدون رقم غرفة')+' — '+Number(o.total||0)+' جنيه','order')})
-      .subscribe();
+    var channel=null;
+    function connect(){
+      if(channel)return;
+      channel=sb.channel('xo-notification-feed')
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'bookings'},function(p){var b=p.new||{};notify('طلب حجز جديد',(b.customer_name||'عميل')+' — '+(b.room_name||'')+'، '+(b.booking_date||'')+' '+String(b.booking_time||'').slice(0,5),'booking')})
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bookings'},function(p){var b=p.new||{};notify('تحديث الحجز',(b.customer_name||'')+' — '+(b.status==='confirmed'?'تم تأكيد الحجز':b.status==='rejected'?'تم رفض الحجز':'تم تعديل بيانات الحجز'),'booking')})
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'cafe_orders'},function(p){var o=p.new||{};notify('طلب كافيتريا جديد',(o.room_name||'بدون رقم غرفة')+' — '+Number(o.total||0)+' جنيه','order')})
+        .subscribe();
+    }
+    sb.auth.onAuthStateChange(function(event,session){if(session)connect()});
   }
   function customerRealtime(){
     if(isManager())return;
