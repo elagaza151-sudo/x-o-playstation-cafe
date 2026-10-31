@@ -365,7 +365,8 @@ $("send").onclick=async function(){
  var cfg=window.xoCustomerCloud.state.payment||{},pct=Number(cfg.depositPercent==null?30:cfg.depositPercent),total=sel.p*h,deposit=Math.ceil(total*pct/100),ref=$("payRef").value.trim();
  if(!name||!date||!time){alert("اكتب الاسم واليوم والساعة");return}
  if(!ref){alert("ادفع العربون أولاً واكتب رقم مرجع التحويل");return}
- try{await window.xoCustomerCloud.createBooking({name:name,roomName:sel.n,roomPrice:sel.p,date:date,time:time,hours:h,total:total,deposit:deposit,paymentMethod:$("payMethod").value,paymentRef:ref});
+ try{var bookingResult=await window.xoCustomerCloud.createBooking({name:name,roomName:sel.n,roomPrice:sel.p,date:date,time:time,hours:h,total:total,deposit:deposit,paymentMethod:$("payMethod").value,paymentRef:ref});
+ if(window.xoNotify)window.xoNotify.notify("تم استلام طلب الحجز","الحجز في انتظار تأكيد الإدارة — "+sel.n,"booking");
  alert("تم إرسال طلب الحجز بنجاح. الحجز غير مؤكد حتى يراجعه العامل ويؤكده من لوحة التشغيل.");$("payRef").value="";
  }catch(e){console.error(e);alert("تعذر إرسال الحجز. تأكد من الاتصال وحاول مرة أخرى.")}
 };
@@ -392,7 +393,7 @@ function drawQty(q,id){var n=cart[id]||0;q.innerHTML=n?"<button aria-label='نق
 function bar(){var c=0,s=0,p;for(var id in cart){p=id.split("|");c+=cart[id];s+=cart[id]*MENU[p[0]][p[1]][2]}
  $("cnt").textContent=money(c);$("sum").textContent=money(s);$("bar").classList.toggle("on",c>0)}
 $("order").onclick=async function(){var items=[],s=0,p,it;for(var id in cart){p=id.split("|");it=MENU[p[0]][p[1]];items.push({name:it[0],category:p[0],quantity:cart[id],unit_price:it[2]});s+=cart[id]*it[2]}
- if(!items.length)return;try{await window.xoCustomerCloud.createOrder({roomName:$("rm").value.trim(),items:items,total:s});alert("تم إرسال طلبك للكاشير بنجاح!");cart={};renderMenu();bar()}catch(e){console.error(e);alert("تعذر إرسال الطلب. حاول مرة أخرى.")}};
+ if(!items.length)return;try{await window.xoCustomerCloud.createOrder({roomName:$("rm").value.trim(),items:items,total:s});if(window.xoNotify)window.xoNotify.notify("تم استلام طلب الكافيتريا","إجمالي الطلب "+money(s)+" جنيه — جاري إرساله للكاشير","order");alert("تم إرسال طلبك للكاشير بنجاح!");cart={};renderMenu();bar()}catch(e){console.error(e);alert("تعذر إرسال الطلب. حاول مرة أخرى.")}};
 
 // Community tools (local prototype; connect to an AI API/Supabase for live multi-device use)
 function playerNames(id){return $(id).value.split(/\n|,/).map(function(x){return x.trim()}).filter(Boolean)}
