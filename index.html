@@ -167,6 +167,29 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 .ai-auth .auth-user{font-weight:700;color:var(--pop);margin-top:8px}
 #aiRemaining{font-weight:700;color:var(--pop);margin:8px 0}
 
+
+/* Reliable auth transition and fixed account controls */
+#siteAccountBar{position:fixed;top:12px;inset-inline-start:12px;z-index:9998;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:8px 10px 8px 14px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(5,38,35,.92);color:#F3F7F5;box-shadow:0 8px 28px #0004;backdrop-filter:blur(14px);font-size:13px}
+#siteAccountBar[hidden]{display:none}
+#siteAccountEmail{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#siteSignOut{border:0;border-radius:999px;background:#FFD23F;color:#1E1B00;padding:8px 13px;font:700 13px Rubik;cursor:pointer}
+#siteSignOut:disabled{opacity:.55;cursor:wait}
+#siteAuthGate{transition:opacity .38s ease,visibility .38s ease}
+#siteAuthGate.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
+#siteAuthGate.is-leaving .site-auth-inner{transform:translateY(18px) scale(.96);opacity:0}
+.site-auth-inner{transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .38s ease}
+@keyframes xoGateIn{from{opacity:0;transform:translateY(24px) scale(.96);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes xoSiteEnter{from{opacity:.35;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes xoSectionEnter{from{opacity:0;transform:translateY(26px) scale(.985)}to{opacity:1;transform:none}}
+#siteAuthGate:not([hidden]) .site-auth-inner{animation:xoGateIn .65s cubic-bezier(.16,1,.3,1) both}
+.layer.xo-site-enter{animation:xoSiteEnter .65s cubic-bezier(.16,1,.3,1) both}
+.layer.xo-site-enter main>section{animation:xoSectionEnter .65s cubic-bezier(.16,1,.3,1) both}
+.layer.xo-site-enter main>section:nth-child(2){animation-delay:.08s}
+.layer.xo-site-enter main>section:nth-child(3){animation-delay:.16s}
+.layer.xo-site-enter main>section:nth-child(4){animation-delay:.24s}
+@media(max-width:600px){#siteAccountBar{top:8px;inset-inline-start:8px;padding:6px 8px;font-size:11px}#siteSignOut{padding:7px 10px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){#siteAuthGate,.site-auth-inner,.layer.xo-site-enter,.layer.xo-site-enter main>section{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -181,6 +204,7 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
   </div>
 </div>
 
+<div id="siteAccountBar" hidden aria-live="polite"><span id="siteAccountEmail"></span><button type="button" id="siteSignOut">تسجيل الخروج</button></div>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div class="layer">
 <header class="wrap hero">
@@ -369,55 +393,98 @@ $('publicTournaments').addEventListener('click',async function(e){var b=e.target
 function safeText(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 $("aiGo").onclick=async function(){var authState=await window.xoSupabase.auth.getSession(),activeSession=authState.data&&authState.data.session;if(!activeSession){$('aiResult').textContent='ميزة المساعد الذكي متاحة بعد تسجيل الدخول فقط. سجّل من هنا بالأعلى.';$('aiAuthEmail').focus();return}var names=playerNames('aiNames'),task=$('aiTask').value,game=$('aiGame').value,n=Math.max(2,Number($('aiCount').value)||4),out='';if(task==='fc'){var hi=['ريال مدريد','مانشستر سيتي','بايرن ميونخ','باريس سان جيرمان','ليفربول','برشلونة','أرسنال','إنتر ميلان'],no=['أستون فيلا','نيوكاسل','لاتسيو','روما','إشبيلية','أياكس','بورتو','مارسيليا'],lv=$('aiLevel').value,count=Math.min(10,Math.max(1,Number($('aiMatches').value)||3));out='🎮 '+game+'\n';for(var i=1;i<=count;i++){var pool=(lv==='high'?hi:lv==='normal'?no:hi.concat(no)).slice().sort(function(){return Math.random()-.5});out+='الماتش '+i+': '+pool[0]+' ضد '+pool[1]+'\n'}}else if(task==='teams'){if(names.length<2)out='اكتب اسم لاعبين على الأقل.';else{names.sort(function(){return Math.random()-.5});var t=[[],[]];names.forEach(function(x,i){t[i%2].push(x)});out='الفريق الأول: '+t[0].join('، ')+'\nالفريق الثاني: '+t[1].join('، ')}}else if(task==='plan')out='خطة لعب لـ '+game+' وعدد '+n+' لاعبين: إحماء، مباريات قصيرة، تسجيل النتائج، ثم نهائي.';else out='اتفقوا على مدة المباراة، قواعد التعادل، واللعب النظيف.';$('aiResult').textContent=out};
 
-// X/O visitor accounts (Supabase Auth)
+// X/O visitor accounts (Supabase Auth) — stable gate + persistent account controls
 (function initAiAccounts(){
- var sb=window.xoSupabase, status=$('aiAuthStatus'), userBox=$('aiAuthUser'), remaining=$('aiRemaining'), gateDismissed=false;
- function authMessage(t){status.textContent=t}
- function setRemaining(n){remaining.textContent=Number.isFinite(Number(n))?'المتبقي: '+Number(n)+' / 10 رسائل':'المتبقي: — / 10 رسائل'}
- function updateAuth(user){
-  var logged=!!user, gate=$('siteAuthGate'), panel=$('aiAuthPanel'), slot=$('siteAuthSlot'), placeholder=$('aiAuthPlaceholder'), site=document.querySelector('.layer');
-  if(logged){
-   if(placeholder && panel && panel.parentNode!==placeholder.parentNode) placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);
-   gate.hidden=true;
-   if(site)site.inert=false;
-  }else{
-   if(slot && panel && panel.parentNode!==slot) slot.appendChild(panel);
-   gate.hidden=gateDismissed;
-   if(site)site.inert=!gateDismissed;
-  }
-  $('aiSignOut').hidden=!logged;
-  $('aiSignUp').hidden=logged;
-  $('aiSignIn').hidden=logged;
-  $('aiGoogleSignIn').hidden=logged;
-  $('aiAuthEmail').disabled=logged;
-  $('aiAuthPassword').disabled=logged;
-  userBox.textContent=logged?'تم تسجيل الدخول: '+(user.email||'حسابك'):'';
-  if(!logged){authMessage('سجّل دخولك علشان تدخل الموقع.');setRemaining(null)}
+ var sb=window.xoSupabase, status=$('aiAuthStatus'), userBox=$('aiAuthUser'), remaining=$('aiRemaining');
+ var gate=$('siteAuthGate'), panel=$('aiAuthPanel'), slot=$('siteAuthSlot'), placeholder=$('aiAuthPlaceholder');
+ var site=document.querySelector('.layer'), accountBar=$('siteAccountBar'), accountEmail=$('siteAccountEmail');
+ var gateDismissed=false, authReady=false;
+ function authMessage(t){if(status)status.textContent=t}
+ function setRemaining(n){if(remaining)remaining.textContent=Number.isFinite(Number(n))?'المتبقي: '+Number(n)+' / 10 رسائل':'المتبقي: — / 10 رسائل'}
+ function animateSite(){
+   if(site){site.classList.remove('xo-site-enter');void site.offsetWidth;site.classList.add('xo-site-enter');site.inert=false;}
  }
- $('siteSkipLogin').onclick=function(){gateDismissed=true;if(placeholder && panel)placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);gate.hidden=true;var site=document.querySelector('.layer');if(site)site.inert=false;authMessage('أنت بتتصفح كزائر. سجّل الدخول من قسم المساعد لاستخدام ميزات AI.');};
+ function closeGate(){
+   if(!gate)return;
+   gate.classList.add('is-leaving');
+   window.setTimeout(function(){gate.hidden=true;gate.classList.remove('is-leaving');},420);
+   animateSite();
+ }
+ function updateAuth(user){
+   var logged=!!user;
+   if(logged){
+     gateDismissed=true;
+     if(placeholder&&panel&&panel.parentNode!==placeholder.parentNode)placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);
+     closeGate();
+   }else{
+     if(slot&&panel&&panel.parentNode!==slot)slot.appendChild(panel);
+     if(gate){gate.hidden=gateDismissed;gate.classList.remove('is-leaving');}
+     if(site)site.inert=!gateDismissed;
+   }
+   $('aiSignOut').hidden=!logged;
+   $('aiSignUp').hidden=logged;
+   $('aiSignIn').hidden=logged;
+   $('aiGoogleSignIn').hidden=logged;
+   $('aiAuthEmail').disabled=logged;
+   $('aiAuthPassword').disabled=logged;
+   if(accountBar)accountBar.hidden=!logged;
+   if(accountEmail)accountEmail.textContent=logged?(user.email||'حسابك'):'';
+   if(userBox)userBox.textContent=logged?'تم تسجيل الدخول: '+(user.email||'حسابك'):'';
+   if(!logged){authMessage(gateDismissed?'أنت بتتصفح كزائر. سجّل الدخول لاستخدام ميزات AI.':'سجّل دخولك علشان تدخل الموقع.');setRemaining(null);}
+   else{authMessage('أهلًا بيك! تم تسجيل الدخول بنجاح.');}
+ }
+ if(!sb||!sb.auth){authMessage('تعذر تحميل نظام تسجيل الدخول. حدّث الصفحة، ولو استمرت المشكلة تواصل مع الإدارة.');return;}
+ $('siteSkipLogin').addEventListener('click',function(){
+   gateDismissed=true;
+   if(placeholder&&panel)placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);
+   authMessage('أنت بتتصفح كزائر. تسجيل الدخول مطلوب لاستخدام AI فقط.');
+   closeGate();
+ });
  $('aiSignUp').onclick=async function(){
-  var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
-  if(!email||password.length<6){authMessage('اكتب بريد إلكتروني صحيح وكلمة مرور من 6 أحرف على الأقل.');return}
-  this.disabled=true;
-  try{var r=await sb.auth.signUp({email:email,password:password,options:{emailRedirectTo:location.origin+location.pathname}});if(r.error)throw r.error;authMessage(r.data.session?'تم إنشاء الحساب وتسجيل الدخول بنجاح.':'تم إنشاء الحساب. راجع بريدك الإلكتروني واضغط رابط التأكيد، وبعدها سجّل الدخول.')}
-  catch(e){authMessage(e.message||'تعذر إنشاء الحساب. حاول مرة أخرى.')}finally{this.disabled=false}
+   var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
+   if(!email||password.length<6){authMessage('اكتب بريد إلكتروني صحيح وكلمة مرور من 6 أحرف على الأقل.');return;}
+   var btn=this;btn.disabled=true;authMessage('جاري إنشاء الحساب...');
+   try{
+     var r=await sb.auth.signUp({email:email,password:password,options:{emailRedirectTo:location.origin+location.pathname}});
+     if(r.error)throw r.error;
+     if(r.data&&r.data.session){updateAuth(r.data.session.user);}
+     else authMessage('تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد، وبعدها ارجع وسجّل الدخول.');
+   }catch(e){console.error('X/O sign up:',e);authMessage(e.message||'تعذر إنشاء الحساب. حاول مرة أخرى.');}
+   finally{btn.disabled=false;}
  };
  $('aiSignIn').onclick=async function(){
-  var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
-  if(!email||!password){authMessage('اكتب البريد الإلكتروني وكلمة المرور.');return}
-  this.disabled=true;
-  try{var r=await sb.auth.signInWithPassword({email:email,password:password});if(r.error)throw r.error;authMessage('أهلًا بيك! حسابك جاهز.')}
-  catch(e){authMessage(e.message||'تعذر تسجيل الدخول. راجع البيانات أو أكد بريدك الإلكتروني.')}finally{this.disabled=false}
+   var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
+   if(!email||!password){authMessage('اكتب البريد الإلكتروني وكلمة المرور.');return;}
+   var btn=this;btn.disabled=true;authMessage('جاري تسجيل الدخول...');
+   try{
+     var r=await sb.auth.signInWithPassword({email:email,password:password});
+     if(r.error)throw r.error;
+     if(!r.data||!r.data.session)throw new Error('لم يتم إنشاء جلسة دخول. تأكد من تأكيد البريد الإلكتروني.');
+     updateAuth(r.data.user||r.data.session.user);
+   }catch(e){console.error('X/O sign in:',e);authMessage(e.message||'تعذر تسجيل الدخول. راجع البيانات وحاول مرة أخرى.');}
+   finally{btn.disabled=false;}
  };
  $('aiGoogleSignIn').onclick=async function(){
-  this.disabled=true;
-  try{var r=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(r.error)throw r.error}
-  catch(e){authMessage(e.message||'تعذر تسجيل الدخول باستخدام Google.')}finally{this.disabled=false}
+   var btn=this;btn.disabled=true;authMessage('جاري فتح تسجيل الدخول باستخدام Google...');
+   try{
+     var r=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+     if(r.error)throw r.error;
+   }catch(e){console.error('X/O Google sign in:',e);authMessage(e.message||'تعذر تسجيل الدخول باستخدام Google.');btn.disabled=false;}
  };
- $('aiSignOut').onclick=async function(){var r=await sb.auth.signOut();if(r.error)authMessage(r.error.message);else{updateAuth(null);authMessage('تم تسجيل الخروج.')}};
- sb.auth.onAuthStateChange(function(event,session){updateAuth(session&&session.user);if(session&&session.user&&event==='SIGNED_IN')authMessage('أهلًا بيك! تم فتح الموقع بنجاح.')});
- sb.auth.getSession().then(function(r){updateAuth(r.data&&r.data.session&&r.data.session.user)});
-})();
+ async function signOut(){
+   var btn=$('siteSignOut');if(btn)btn.disabled=true;
+   try{var r=await sb.auth.signOut();if(r.error)throw r.error;updateAuth(null);authMessage('تم تسجيل الخروج. تقدر تكمل كزائر أو تسجل دخول تاني.');}
+   catch(e){console.error('X/O sign out:',e);authMessage(e.message||'تعذر تسجيل الخروج. حاول مرة أخرى.');}
+   finally{if(btn)btn.disabled=false;}
+ }
+ $('aiSignOut').onclick=signOut;
+ if($('siteSignOut'))$('siteSignOut').onclick=signOut;
+ // Supabase emits INITIAL_SESSION after restoring a persisted login; use this as the single source of truth.
+ sb.auth.onAuthStateChange(function(event,session){
+   updateAuth(session&&session.user);
+   if(event==='SIGNED_IN')authMessage('أهلًا بيك! تم فتح الموقع بنجاح.');
+ });
+})();;
 $('aiAsk').onclick=async function(){var question=$('aiQuestion').value.trim(),answer=$('aiAnswer'),button=$('aiAsk');if(!question){answer.textContent='اكتب سؤالك الأول.';return}var sessionResult=await window.xoSupabase.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;if(!session){answer.textContent='سجّل دخولك أو أنشئ حساب الأول علشان تستخدم المساعد.';$('aiAuthEmail').focus();return}button.disabled=true;button.textContent='جاري التفكير...';answer.textContent='ثواني وبجهزلك الرد 🤖';try{var response=await fetch(window.XO_SUPABASE_URL+'/functions/v1/ai-chat',{method:'POST',headers:{'Content-Type':'application/json','apikey':window.XO_SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({question:question})});var data=await response.json().catch(function(){return {}});if(!response.ok)throw new Error(data.error||'تعذر الحصول على رد');answer.textContent=data.answer||'لم يصل رد. حاول مرة أخرى.';$('aiRemaining').textContent='المتبقي: '+Number(data.remaining)+' / 10 رسائل'}catch(err){answer.textContent=err.message||'حصلت مشكلة في الاتصال. حاول مرة أخرى.'}finally{button.disabled=false;button.textContent='اسأل AI'}};
 var wheelRotation=0,wheelPalette=['#ff5a6e','#6f9bff','#2ee6b8','#ffcf5a','#b58cff','#ff925a','#55c9d8','#e879c5'];function drawWheel(){var names=playerNames('wheelNames'),cv=$("wheel"),ctx=cv.getContext('2d'),cx=300,cy=300,r=286;ctx.clearRect(0,0,600,600);if(!names.length){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='#2ee6b8';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.fillText('اكتب الأسماء',cx,cy);return}var step=Math.PI*2/names.length;names.forEach(function(name,i){var a=-Math.PI/2+i*step;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+step);ctx.closePath();ctx.fillStyle=wheelPalette[i%wheelPalette.length];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);ctx.textAlign='right';ctx.fillStyle='#102b2a';ctx.font='bold '+(names.length>12?'19':'25')+'px sans-serif';var label=name.length>18?name.slice(0,17)+'…':name;ctx.fillText(label,r-24,8);ctx.restore()});ctx.beginPath();ctx.arc(cx,cy,42,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('X/O',cx,cy)}$("wheelNames").addEventListener('input',drawWheel);drawWheel();$("spin").onclick=function(){var names=playerNames('wheelNames');if(!names.length){$("wheelResult").textContent='اكتب أسماء اللاعبين الأول.';return}var winner=names[Math.floor(Math.random()*names.length)];wheelRotation+=1440+Math.random()*720;$("wheel").style.transform='rotate('+wheelRotation+'deg)';$("wheelResult").textContent='🎉 الاختيار وقع على: '+winner};
 showTournaments();window.addEventListener('xo-cloud-ready',function(){refreshPaymentDetails();showTournaments()});
