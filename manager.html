@@ -138,6 +138,7 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/manager-cloud.js"></script>
+<script src="js/notifications.js"></script>
 <script>
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -278,13 +279,13 @@ async function act(a,d){
  if(a=="tab"){if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(d.v)>=0){toast("الصلاحية دي للمدير فقط");return}view=d.v;render();return}
  if(a=="close"){$("dlg").close();render();return}
  if(a=="rng"){range=d.v;render();return}
- if(a=="start"){var r=room(d.r),n=$("n"+d.r);r.ss={s:Date.now(),c:n?n.value.trim():"",o:[],shift:activeShift(),operator:currentUser?currentUser.user:""};toast("بدأ الوقت – "+r.n)}
+ if(a=="start"){var r=room(d.r),n=$("n"+d.r);r.ss={s:Date.now(),c:n?n.value.trim():"",o:[],shift:activeShift(),operator:currentUser?currentUser.user:"",durationMs:0};toast("بدأ الوقت – "+r.n);if(window.xoNotify)window.xoNotify.notify("بدأت جلسة جديدة",r.n+(r.ss.c?" — "+r.ss.c:""),"session")}
  else if(a=="addc"){openAdd(d.r);return}
- else if(a=="add"){var o=d.r=="walk"?S.walk:room(d.r).ss.o;addLine(o,d.i);save();if(d.m)openAdd(d.r);else render();return}
- else if(a=="done"){room(d.r).ss.o.forEach(function(l){if(l.id==d.l)l.done=true})}
+ else if(a=="add"){var o=d.r=="walk"?S.walk:room(d.r).ss.o;addLine(o,d.i);save();if(window.xoNotify)window.xoNotify.notify("تمت إضافة صنف للكافيتريا",S.menu[d.i][0]+" — "+(d.r=="walk"?"بيع مباشر":room(d.r).n),"cafe");if(d.m)openAdd(d.r);else render();return}
+ else if(a=="done"){room(d.r).ss.o.forEach(function(l){if(l.id==d.l)l.done=true});if(window.xoNotify)window.xoNotify.notify("تم تسليم صنف",room(d.r).n,"cafe")}
  else if(a=="end"){openEnd(d.r);return}
  else if(a=="pay"&&ck){var r=room(ck.rid),ms=ck.end-r.ss.s,tc=cost(r,ms),cc=sum(r.ss.o),dc=Math.min(Number($("dc").value||0),tc+cc);
-  S.sales.push({id:id(),t:ck.end,r:r.n,c:r.ss.c,ms:ms,tc:tc,cc:cc,d:dc,tot:tc+cc-dc,pay:$("pm").value,shift:r.ss.shift||activeShift(),operator:r.ss.operator||(currentUser?currentUser.user:"")});r.ss=null;ck=null;$("dlg").close();toast("تم الدفع")}
+  S.sales.push({id:id(),t:ck.end,r:r.n,c:r.ss.c,ms:ms,tc:tc,cc:cc,d:dc,tot:tc+cc-dc,pay:$("pm").value,shift:r.ss.shift||activeShift(),operator:r.ss.operator||(currentUser?currentUser.user:"")});r.ss=null;ck=null;$("dlg").close();toast("تم الدفع");if(window.xoNotify)window.xoNotify.notify("انتهت الجلسة وتم الحساب",r.n,"session")}
  else if(a=="wsell"){var w=S.walk,t=sum(w);S.sales.push({id:id(),t:Date.now(),r:"كاشير",c:"",ms:0,tc:0,cc:t,d:0,tot:t,pay:$("wp").value,shift:activeShift(),operator:currentUser?currentUser.user:""});S.walk=[];toast("تم البيع")}
  else if(a=="wclr"){S.walk=[]}
  else if(a=="bkadd"){var br=room($("br").value),hours=Math.max(1,Number($("bh").value)||1),total=(br?br.rate:0)*hours,deposit=Math.max(0,Number($("bdep").value)||0),b={id:id(),r:Number($("br").value),n:$("bn").value.trim(),ph:$("bp").value.trim(),d:$("bd").value,tm:$("bt").value,h:hours,total:total,deposit:deposit,paymentMethod:$("bpm").value,paymentRef:$("bref").value.trim(),createdBy:currentUser?currentUser.user:"",createdShift:activeShift()};
@@ -292,9 +293,9 @@ async function act(a,d){
   if(deposit>total){toast("العربون أكبر من إجمالي الحجز");return}
   if(b.paymentMethod!=="cash"&&deposit>0&&!b.paymentRef){toast("اكتب مرجع التحويل الإلكتروني");return}
   var s1=mins(b.tm),e1=s1+b.h*60,bad=S.bk.some(function(x){return x.r==b.r&&x.d==b.d&&s1<mins(x.tm)+x.h*60&&mins(x.tm)<e1});
-  if(bad){toast("الغرفة محجوزة في الوقت ده");return}S.bk.push(b);toast("تم حفظ الحجز")}
+  if(bad){toast("الغرفة محجوزة في الوقت ده");return}S.bk.push(b);toast("تم حفظ الحجز");if(window.xoNotify)window.xoNotify.notify("تم تسجيل حجز جديد",b.n+" — "+br.n+"، "+b.d+" "+b.tm,"booking")}
  else if(a=="bkdel"){S.bk=S.bk.filter(function(x){return x.id!=d.b})}
- else if(a=="bkgo"){var b=S.bk.filter(function(x){return x.id==d.b})[0],r=room(b.r);r.ss={s:Date.now(),c:b.n,o:[],shift:activeShift(),operator:currentUser?currentUser.user:""};S.bk=S.bk.filter(function(x){return x.id!=b.id});view="rooms";toast("بدأ الوقت – "+r.n)}
+ else if(a=="bkgo"){var b=S.bk.filter(function(x){return x.id==d.b})[0],r=room(b.r);r.ss={s:Date.now(),c:b.n,o:[],shift:activeShift(),operator:currentUser?currentUser.user:"",durationMs:Number(b.h||0)*3600000};S.bk=S.bk.filter(function(x){return x.id!=b.id});view="rooms";toast("بدأ الوقت – "+r.n);if(window.xoNotify)window.xoNotify.notify("بدأ الحجز",b.n+" — "+r.n+" لمدة "+b.h+" ساعة","booking")}
  else if(a=="eadd"){var n=$("en").value.trim(),v=Number($("ea").value);if(!n||!v){toast("اكتب البند والمبلغ");return}S.exp.push({id:id(),t:Date.now(),n:n,a:v,shift:activeShift(),operator:currentUser?currentUser.user:""})}
  else if(a=="edel"){S.exp=S.exp.filter(function(x){return x.id!=d.e})}
  else if(a=="radd"){S.rooms.push({id:id(),n:"غرفة جديدة",rate:60})}
