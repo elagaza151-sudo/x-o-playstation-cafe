@@ -292,8 +292,10 @@ async function act(a,d){
   if(!b.n||!b.d||!b.tm){toast("اكتب الاسم واليوم والساعة");return}
   if(deposit>total){toast("العربون أكبر من إجمالي الحجز");return}
   if(b.paymentMethod!=="cash"&&deposit>0&&!b.paymentRef){toast("اكتب مرجع التحويل الإلكتروني");return}
-  var s1=mins(b.tm),e1=s1+b.h*60,bad=S.bk.some(function(x){return x.r==b.r&&x.d==b.d&&s1<mins(x.tm)+x.h*60&&mins(x.tm)<e1});
-  if(bad){toast("الغرفة محجوزة في الوقت ده");return}S.bk.push(b);toast("تم حفظ الحجز");if(window.xoNotify)window.xoNotify.notify("تم تسجيل حجز جديد",b.n+" — "+br.n+"، "+b.d+" "+b.tm,"booking")}
+  if(b.d<today()){toast("لا يمكن تسجيل حجز بتاريخ سابق");return}
+  if(!br||!Number.isInteger(b.h)||b.h<1||b.h>12){toast("بيانات الغرفة أو مدة الحجز غير صحيحة");return}
+  var s1=mins(b.tm),e1=s1+b.h*60,remoteConflict=(sharedGet().bookings||[]).some(function(x){if(x.roomName!==br.n||x.date!==b.d||["pending","confirmed"].indexOf(x.status)<0)return false;var xs=mins(String(x.time).slice(0,5)),xe=xs+Number(x.hours||0)*60;return s1<xe&&xs<e1}),localConflict=S.bk.some(function(x){return x.r==b.r&&x.d==b.d&&s1<mins(x.tm)+x.h*60&&mins(x.tm)<e1});
+  if(remoteConflict||localConflict){toast("الغرفة محجوزة في الوقت ده، سواء من الموقع أو الإدارة");return}S.bk.push(b);toast("تم حفظ الحجز");if(window.xoNotify)window.xoNotify.notify("تم تسجيل حجز جديد",b.n+" — "+br.n+"، "+b.d+" "+b.tm,"booking")}
  else if(a=="bkdel"){S.bk=S.bk.filter(function(x){return x.id!=d.b})}
  else if(a=="bkgo"){var b=S.bk.filter(function(x){return x.id==d.b})[0],r=room(b.r);r.ss={s:Date.now(),c:b.n,o:[],shift:activeShift(),operator:currentUser?currentUser.user:"",durationMs:Number(b.h||0)*3600000};S.bk=S.bk.filter(function(x){return x.id!=b.id});view="rooms";toast("بدأ الوقت – "+r.n);if(window.xoNotify)window.xoNotify.notify("بدأ الحجز",b.n+" — "+r.n+" لمدة "+b.h+" ساعة","booking")}
  else if(a=="eadd"){var n=$("en").value.trim(),v=Number($("ea").value);if(!n||!v){toast("اكتب البند والمبلغ");return}S.exp.push({id:id(),t:Date.now(),n:n,a:v,shift:activeShift(),operator:currentUser?currentUser.user:""})}
