@@ -21,10 +21,11 @@
     var host=document.getElementById('xoNotifyHost');
     if(!host)return;
     var items=read(),unread=items.filter(function(x){return!x.read}).length;
-    host.innerHTML='<button type="button" id="xoNotifyBell" aria-label="الإشعارات">🔔 <b>'+unread+'</b></button><section id="xoNotifyPanel" hidden><header><strong>الإشعارات</strong><button type="button" id="xoNotifyReadAll">قراءة الكل</button></header><div class="xoNotifyList">'+(items.length?items.map(function(x){return '<article class="'+(x.read?'read':'')+'"><b>'+escapeHtml(x.title)+'</b><p>'+escapeHtml(x.body)+'</p><small>'+new Date(x.at).toLocaleString('ar-EG')+'</small></article>'}).join(''):'<p class="empty">لا توجد إشعارات حتى الآن</p>')+'</div><footer><button type="button" id="xoNotifyClear">مسح الإشعارات</button></footer></section>';
+    host.innerHTML='<button type="button" id="xoNotifyBell" aria-label="الإشعارات">🔔 <b>'+unread+'</b></button><section id="xoNotifyPanel" hidden><header><strong>الإشعارات</strong><button type="button" id="xoNotifyReadAll">قراءة الكل</button></header><div class="xoNotifyList">'+(items.length?items.map(function(x){return '<article class="'+(x.read?'read':'')+'"><b>'+escapeHtml(x.title)+'</b><p>'+escapeHtml(x.body)+'</p><small>'+new Date(x.at).toLocaleString('ar-EG')+'</small></article>'}).join(''):'<p class="empty">لا توجد إشعارات حتى الآن</p>')+'</div><footer><button type="button" id="xoNotifyEnable">تفعيل تنبيهات الجهاز</button><button type="button" id="xoNotifyClear">مسح الإشعارات</button></footer></section>';
     document.getElementById('xoNotifyBell').onclick=function(){var p=document.getElementById('xoNotifyPanel');p.hidden=!p.hidden};
     document.getElementById('xoNotifyReadAll').onclick=function(){write(read().map(function(x){x.read=true;return x}));render()};
     document.getElementById('xoNotifyClear').onclick=function(){write([]);render()};
+    document.getElementById('xoNotifyEnable').onclick=function(){if(!('Notification'in window)){toast('المتصفح لا يدعم إشعارات الجهاز');return}Notification.requestPermission().then(function(p){toast(p==='granted'?'تم تفعيل إشعارات الجهاز':'لم يتم السماح بالإشعارات')})};
   }
   function addHost(){
     if(document.getElementById('xoNotifyHost'))return;
