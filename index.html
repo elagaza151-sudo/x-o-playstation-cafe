@@ -377,7 +377,7 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
  function updateAuth(user){
   var logged=!!user, gate=$('siteAuthGate'), panel=$('aiAuthPanel'), slot=$('siteAuthSlot'), placeholder=$('aiAuthPlaceholder'), site=document.querySelector('.layer');
   if(logged){
-   if(placeholder && panel && panel.parentNode!==placeholder.parentNode) placeholder.appendChild(panel);
+   if(placeholder && panel && panel.parentNode!==placeholder.parentNode) placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);
    gate.hidden=true;
    if(site)site.inert=false;
   }else{
