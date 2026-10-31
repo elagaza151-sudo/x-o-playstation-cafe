@@ -462,7 +462,7 @@ $("aiGo").onclick=async function(){var authState=await window.xoSupabase.auth.ge
    gateDismissed=true;localStorage.setItem(GUEST_KEY,'1');
    if(placeholder&&panel)placeholder.parentNode.insertBefore(panel,placeholder.nextSibling);
    authMessage('أنت بتتصفح كزائر. تسجيل الدخول مطلوب لاستخدام AI فقط.');
-   closeGate();if(navAuth)navAuth.textContent='تسجيل الدخول';
+   closeGate();animateSite();if(navAuth)navAuth.textContent='تسجيل الدخول';
  });
  $('aiSignUp').onclick=async function(){
    var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
