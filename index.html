@@ -142,6 +142,20 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 @media(prefers-reduced-motion:reduce){#xo-intro{display:none}.xo-icon-pop,.xo-stagger-in{animation:none!important}}
 
 
+
+/* Required sign-in gate for the entire customer website */
+#siteAuthGate{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;overflow:auto;padding:24px 16px;background:radial-gradient(ellipse at 50% 0%,rgba(46,230,184,.14),transparent 55%),#082f2c}
+#siteAuthGate[hidden]{display:none}
+.site-auth-inner{width:min(100%,520px);text-align:center;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:clamp(20px,5vw,34px);box-shadow:0 24px 80px #0005;backdrop-filter:blur(16px)}
+.site-auth-logo{direction:ltr;font-size:68px;font-weight:900;line-height:1;color:#FFD23F;margin-bottom:12px}
+.site-auth-inner h1{font-size:clamp(28px,6vw,38px);margin-bottom:10px}
+.site-auth-inner>p{color:#b7d4ce;margin:0 0 18px}
+.site-auth-inner>small{display:block;color:#9DBFB8;margin-top:14px}
+#siteAuthSlot .ai-auth{margin:0;text-align:start;background:transparent;border:0;padding:0}
+#siteAuthSlot .ai-auth>p.sub{color:#9DBFB8}
+#siteAuthSlot #aiRemaining{display:none}
+@media(max-width:480px){#siteAuthGate{padding:14px 10px}.site-auth-inner{padding:20px 16px}}
+
 /* Visitor accounts for AI assistant */
 .ai-auth{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0 18px}
 .ai-auth .auth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
@@ -157,6 +171,15 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 </head>
 <body>
 <div id="xo-intro" aria-hidden="true"><div class="mark"><span>x</span><span>/</span><span>o</span></div><div class="line"></div></div>
+<div id="siteAuthGate" role="dialog" aria-modal="true" aria-labelledby="siteAuthTitle">
+  <div class="site-auth-inner">
+    <div class="site-auth-logo">x/o</div>
+    <h1 id="siteAuthTitle">أهلاً بيك في X/O</h1>
+    <p>سجّل الدخول أو أنشئ حساب علشان تدخل الموقع وتحجز وتطلب وتستمتع بكل الخدمات.</p>
+    <div id="siteAuthSlot"></div>
+    <small>تسجيل الدخول مطلوب للوصول إلى جميع أقسام الموقع.</small>
+  </div>
+</div>
 
 <canvas id="bg" aria-hidden="true"></canvas>
 <div class="layer">
@@ -198,9 +221,10 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 <section id="community"><h2>العب وشارك 🎮</h2><p class="sub">أدوات ممتعة لتنظيم اللعب والتحديات مع أصحابك.</p>
 <div class="toolgrid">
  <div class="toolcard"><h3>🤖 مساعد X/O الذكي</h3>
+ <div id="aiAuthPlaceholder"></div>
  <div class="ai-auth" id="aiAuthPanel">
   <b>حسابك في X/O</b>
-  <p class="sub" style="margin:4px 0 12px">سجّل أو أنشئ حساب علشان تستخدم المساعد وتحصل على 10 رسائل كل ساعة.</p>
+  <p class="sub" style="margin:4px 0 12px">سجّل أو أنشئ حساب علشان تدخل الموقع وتستخدم كل خدمات X/O.</p>
   <div class="auth-grid">
    <label>البريد الإلكتروني<input id="aiAuthEmail" type="email" autocomplete="email" placeholder="name@example.com"></label>
    <label>كلمة المرور<input id="aiAuthPassword" type="password" autocomplete="current-password" minlength="6" placeholder="6 أحرف على الأقل"></label>
@@ -351,7 +375,16 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
  function authMessage(t){status.textContent=t}
  function setRemaining(n){remaining.textContent=Number.isFinite(Number(n))?'المتبقي: '+Number(n)+' / 10 رسائل':'المتبقي: — / 10 رسائل'}
  function updateAuth(user){
-  var logged=!!user;
+  var logged=!!user, gate=$('siteAuthGate'), panel=$('aiAuthPanel'), slot=$('siteAuthSlot'), placeholder=$('aiAuthPlaceholder'), site=document.querySelector('.layer');
+  if(logged){
+   if(placeholder && panel && panel.parentNode!==placeholder.parentNode) placeholder.appendChild(panel);
+   gate.hidden=true;
+   if(site)site.inert=false;
+  }else{
+   if(slot && panel && panel.parentNode!==slot) slot.appendChild(panel);
+   gate.hidden=false;
+   if(site)site.inert=true;
+  }
   $('aiSignOut').hidden=!logged;
   $('aiSignUp').hidden=logged;
   $('aiSignIn').hidden=logged;
@@ -359,7 +392,7 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
   $('aiAuthEmail').disabled=logged;
   $('aiAuthPassword').disabled=logged;
   userBox.textContent=logged?'تم تسجيل الدخول: '+(user.email||'حسابك'):'';
-  if(!logged){authMessage('سجّل دخولك علشان تبدأ استخدام المساعد.');setRemaining(null)}
+  if(!logged){authMessage('سجّل دخولك علشان تدخل الموقع.');setRemaining(null)}
  }
  $('aiSignUp').onclick=async function(){
   var email=$('aiAuthEmail').value.trim(),password=$('aiAuthPassword').value;
@@ -381,7 +414,7 @@ $("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').v
   catch(e){authMessage(e.message||'تعذر تسجيل الدخول باستخدام Google.')}finally{this.disabled=false}
  };
  $('aiSignOut').onclick=async function(){var r=await sb.auth.signOut();if(r.error)authMessage(r.error.message);else{updateAuth(null);authMessage('تم تسجيل الخروج.')}};
- sb.auth.onAuthStateChange(function(event,session){updateAuth(session&&session.user);if(session&&session.user&&event==='SIGNED_IN')authMessage('أهلًا بيك! تقدر تستخدم 10 رسائل كل ساعة.')});
+ sb.auth.onAuthStateChange(function(event,session){updateAuth(session&&session.user);if(session&&session.user&&event==='SIGNED_IN')authMessage('أهلًا بيك! تم فتح الموقع بنجاح.')});
  sb.auth.getSession().then(function(r){updateAuth(r.data&&r.data.session&&r.data.session.user)});
 })();
 $('aiAsk').onclick=async function(){var question=$('aiQuestion').value.trim(),answer=$('aiAnswer'),button=$('aiAsk');if(!question){answer.textContent='اكتب سؤالك الأول.';return}var sessionResult=await window.xoSupabase.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;if(!session){answer.textContent='سجّل دخولك أو أنشئ حساب الأول علشان تستخدم المساعد.';$('aiAuthEmail').focus();return}button.disabled=true;button.textContent='جاري التفكير...';answer.textContent='ثواني وبجهزلك الرد 🤖';try{var response=await fetch(window.XO_SUPABASE_URL+'/functions/v1/ai-chat',{method:'POST',headers:{'Content-Type':'application/json','apikey':window.XO_SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+session.access_token},body:JSON.stringify({question:question})});var data=await response.json().catch(function(){return {}});if(!response.ok)throw new Error(data.error||'تعذر الحصول على رد');answer.textContent=data.answer||'لم يصل رد. حاول مرة أخرى.';$('aiRemaining').textContent='المتبقي: '+Number(data.remaining)+' / 10 رسائل'}catch(err){answer.textContent=err.message||'حصلت مشكلة في الاتصال. حاول مرة أخرى.'}finally{button.disabled=false;button.textContent='اسأل AI'}};
