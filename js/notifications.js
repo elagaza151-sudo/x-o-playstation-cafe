@@ -42,14 +42,37 @@
       .subscribe();
   }
   function customerRealtime(){
-    var sb=window.xoSupabase;if(!sb||isManager())return;
-    var watchedBookings=JSON.parse(localStorage.getItem('xo_my_bookings_v1')||'[]');
-    var watchedOrders=JSON.parse(localStorage.getItem('xo_my_orders_v1')||'[]');
-    if(!watchedBookings.length&&!watchedOrders.length)return;
-    sb.channel('xo-customer-notifications')
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bookings'},function(p){var b=p.new||{};if(watchedBookings.indexOf(b.id)<0)return;var key='booking_'+b.id+'_'+b.status;if(seenTimers[key])return;seenTimers[key]=1;if(b.status==='confirmed')notify('تم تأكيد حجزك','حجز '+b.room_name+' أصبح مؤكدًا. نتشرف بزيارتك!','booking');else if(b.status==='rejected')notify('تعذر تأكيد الحجز','تواصل مع المكان لمعرفة التفاصيل.','booking')})
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cafe_orders'},function(p){var o=p.new||{};if(watchedOrders.indexOf(o.id)<0)return;var key='order_'+o.id+'_'+o.status;if(seenTimers[key])return;seenTimers[key]=1;var labels={preparing:'بدأ تجهيز طلبك',ready:'طلبك جاهز للاستلام',delivered:'تم تسليم طلبك',cancelled:'تم إلغاء طلبك'};if(labels[o.status])notify(labels[o.status],o.room_name?'طلب الغرفة '+o.room_name:'طلب الكافيتريا','order')})
-      .subscribe();
+    if(isManager())return;
+    async function poll(){
+      var cloud=window.xoCustomerCloud;
+      if(!cloud||!cloud.getStatus)return;
+      var bookings=[],orders=[];
+      try{bookings=JSON.parse(localStorage.getItem('xo_my_bookings_v1')||'[]')}catch(e){}
+      try{orders=JSON.parse(localStorage.getItem('xo_my_orders_v1')||'[]')}catch(e){}
+      for(var i=0;i<bookings.length;i++){
+        try{
+          var res=await cloud.getStatus('booking',bookings[i]),b=res.record;if(!b)continue;
+          var key='xo_last_booking_status_'+b.id,prev=localStorage.getItem(key);
+          if(prev===null)localStorage.setItem(key,b.status);
+          else if(prev!==b.status){localStorage.setItem(key,b.status);
+            if(b.status==='confirmed')notify('تم تأكيد حجزك','حجز '+b.room_name+' أصبح مؤكدًا. نتشرف بزيارتك!','booking');
+            else if(b.status==='rejected')notify('تعذر تأكيد الحجز','تواصل مع المكان لمعرفة التفاصيل.','booking');
+          }
+        }catch(e){}
+      }
+      for(var j=0;j<orders.length;j++){
+        try{
+          var ores=await cloud.getStatus('order',orders[j]),o=ores.record;if(!o)continue;
+          var okey='xo_last_order_status_'+o.id,oprev=localStorage.getItem(okey);
+          if(oprev===null)localStorage.setItem(okey,o.status);
+          else if(oprev!==o.status){localStorage.setItem(okey,o.status);
+            var labels={preparing:'بدأ تجهيز طلبك',ready:'طلبك جاهز للاستلام',delivered:'تم تسليم طلبك',cancelled:'تم إلغاء طلبك'};
+            if(labels[o.status])notify(labels[o.status],o.room_name?'طلب الغرفة '+o.room_name:'طلب الكافيتريا','order');
+          }
+        }catch(e){}
+      }
+    }
+    poll();setInterval(poll,20000);
   }
   function checkSessions(){
     if(!isManager()||!window.xoManagerGetState)return;
