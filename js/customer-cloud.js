@@ -28,10 +28,23 @@
       return state;
     },
     async createBooking(payload) {
-      return submitPublic({ action: 'booking', ...payload });
+      const result = await submitPublic({ action: 'booking', ...payload });
+      if (result.id) {
+        const ids = JSON.parse(localStorage.getItem('xo_my_bookings_v1') || '[]');
+        if (!ids.includes(result.id)) localStorage.setItem('xo_my_bookings_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+      }
+      return result;
     },
     async createOrder(payload) {
-      return submitPublic({ action: 'order', ...payload });
+      const result = await submitPublic({ action: 'order', ...payload });
+      if (result.id) {
+        const ids = JSON.parse(localStorage.getItem('xo_my_orders_v1') || '[]');
+        if (!ids.includes(result.id)) localStorage.setItem('xo_my_orders_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+      }
+      return result;
+    },
+    async getStatus(kind, id) {
+      return submitPublic({ action: 'status', kind, id });
     },
     async registerTournament(id, name, phone) {
       return submitPublic({ action: 'register', tournamentId: id, name, phone });
