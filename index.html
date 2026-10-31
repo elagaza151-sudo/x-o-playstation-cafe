@@ -170,7 +170,7 @@ nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0
 
 /* Auth control lives in the main navigation */
 nav>div{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.nav-auth{border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#FFD23F;color:#1E1B00;padding:8px 14px;font:700 13px Rubik;cursor:pointer;white-space:nowrap}
+.nav-auth{display:inline-flex;align-items:center;justify-content:center;flex:0 0 124px;min-width:124px;text-align:center;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#FFD23F;color:#1E1B00;padding:8px 10px;font:700 13px Rubik;cursor:pointer;white-space:nowrap}
 .nav-auth[hidden]{display:none}
 .nav-auth:disabled{opacity:.55;cursor:wait}
 #siteAuthGate{transition:opacity .38s ease,visibility .38s ease}
@@ -452,10 +452,10 @@ $("aiGo").onclick=async function(){var authState=await window.xoSupabase.auth.ge
    var sessionResult=await sb.auth.getSession(),user=sessionResult.data&&sessionResult.data.session&&sessionResult.data.session.user;
    if(user){
      navAuth.disabled=true;
-     try{var out=await sb.auth.signOut();if(out.error)throw out.error;localStorage.setItem(GUEST_KEY,'1');gateDismissed=true;updateAuth(null);animateSite();}
+     try{gateDismissed=true;localStorage.setItem(GUEST_KEY,'1');var out=await sb.auth.signOut();if(out.error)throw out.error;updateAuth(null);if(gate){gate.hidden=true;gate.classList.remove('is-leaving');}if(site)site.inert=false;navAuth.textContent='تسجيل الدخول';animateSite();}
      catch(e){console.error('X/O sign out:',e);authMessage(e.message||'تعذر تسجيل الخروج.');}
      finally{navAuth.disabled=false;}
-   }else if(!gate.hidden){gate.hidden=true;if(site)site.inert=false;navAuth.textContent='تسجيل الدخول';}
+   }else if(!gate.hidden){gateDismissed=true;localStorage.setItem(GUEST_KEY,'1');gate.hidden=true;if(site)site.inert=false;navAuth.textContent='تسجيل الدخول';}
    else showGate();
  });
  $('siteSkipLogin').addEventListener('click',function(){
