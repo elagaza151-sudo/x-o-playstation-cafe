@@ -190,12 +190,15 @@ function vRooms(){
   h+="</div>"});
  return h+"</div>"}
 function vBk(){
- var h="<h2>الحجوزات</h2><div class='card'><div class='form'><label>الغرفة<select id='br'>"+S.rooms.map(function(r){return"<option value='"+r.id+"'>"+esc(r.n)+"</option>"}).join("")+"</select></label><label>الاسم<input id='bn'></label><label>الموبايل<input id='bp' inputmode='tel'></label><label>اليوم<input id='bd' type='date' value='"+today()+"'></label><label>الساعة<input id='bt' type='time' value='18:00'></label><label>المدة (ساعات)<input id='bh' type='number' min='1' value='2'></label><button class='btn' data-a='bkadd'>حفظ الحجز</button></div></div><div class='card scroll' style='margin-top:14px'><table><tr><th>اليوم</th><th>الساعة</th><th>الغرفة</th><th>الاسم</th><th>المدة</th><th>أُدخل بواسطة / الشيفت</th><th></th></tr>";
+ var h="<h2>الحجوزات</h2><div class='card'><div class='form'><label>الغرفة<select id='br' onchange='updateBookingEstimate()'>"+S.rooms.map(function(r){return"<option value='"+r.id+"'>"+esc(r.n)+"</option>"}).join("")+"</select></label><label>الاسم<input id='bn'></label><label>الموبايل<input id='bp' inputmode='tel'></label><label>اليوم<input id='bd' type='date' value='"+today()+"'></label><label>الساعة<input id='bt' type='time' value='18:00'></label><label>المدة (ساعات)<input id='bh' type='number' min='1' value='2' oninput='updateBookingEstimate()'></label><label>طريقة الدفع<select id='bpm' onchange='toggleBookingRef()'><option value='cash'>نقدي</option><option value='instapay'>InstaPay</option><option value='bank'>تحويل بنكي</option><option value='wallet'>محفظة إلكترونية</option><option value='card'>فيزا</option></select></label><label>العربون المدفوع (جنيه)<input id='bdep' type='number' min='0' value='0' oninput='updateBookingEstimate()'></label><label id='brefwrap' style='display:none'>رقم مرجع التحويل<input id='bref' placeholder='اكتب رقم العملية أو المرجع'></label><div class='card' style='grid-column:1/-1;padding:10px'><div class='row sp'><span>إجمالي الحجز المتوقع</span><b id='btotal'>—</b></div><div class='row sp'><span>المبلغ المتبقي</span><b id='bremaining'>—</b></div></div><button class='btn' data-a='bkadd'>حفظ الحجز</button></div></div><div class='card scroll' style='margin-top:14px'><table><tr><th>اليوم</th><th>الساعة</th><th>الغرفة</th><th>الاسم</th><th>المدة</th><th>الإجمالي</th><th>العربون</th><th>المتبقي</th><th>طريقة الدفع / المرجع</th><th>أُدخل بواسطة / الشيفت</th><th></th></tr>";
  var L=S.bk.slice().sort(function(a,b){return(a.d+a.tm)<(b.d+b.tm)?-1:1});
- if(!L.length)h+="<tr><td colspan='7' class='muted'>مفيش حجوزات. سجل أول حجز من النموذج فوق.</td></tr>";
- L.forEach(function(b){var r=room(b.r),old=b.d<today();
-  h+="<tr style='"+(old?"opacity:.5":"")+"'><td>"+b.d+"</td><td>"+b.tm+"</td><td>"+(r?esc(r.n):"-")+"</td><td>"+esc(b.n)+"<div class='muted'>"+esc(b.ph)+"</div></td><td>"+b.h+" س</td><td class='row'>"+(b.d==today()&&r&&!r.ss?"<button class='btn s' data-a='bkgo' data-b='"+b.id+"'>ابدأ</button>":"")+"<button class='btn r s' data-a='bkdel' data-b='"+b.id+"'>حذف</button></td></tr>"});
- return h+"</table></div>"}
+ if(!L.length)h+="<tr><td colspan='11' class='muted'>مفيش حجوزات. سجل أول حجز من النموذج فوق.</td></tr>";
+ L.forEach(function(b){var r=room(b.r),old=b.d<today(),total=Number(b.total||((r?r.rate:0)*b.h)),dep=Number(b.deposit||0),pm={cash:"نقدي",instapay:"InstaPay",bank:"تحويل بنكي",wallet:"محفظة إلكترونية",card:"فيزا"}[b.paymentMethod]||"—";
+  h+="<tr style='"+(old?"opacity:.5":"")+"'><td>"+b.d+"</td><td>"+b.tm+"</td><td>"+(r?esc(r.n):"-")+"</td><td>"+esc(b.n)+"<div class='muted'>"+esc(b.ph)+"</div></td><td>"+b.h+" س</td><td>"+money(total)+" ج</td><td>"+money(dep)+" ج</td><td>"+money(Math.max(0,total-dep))+" ج</td><td>"+pm+(b.paymentRef?"<div class='muted'>"+esc(b.paymentRef)+"</div>":"")+"</td><td>"+esc(b.createdBy||"")+" / "+esc(b.createdShift||"")+"</td><td class='row'>"+(b.d==today()&&r&&!r.ss?"<button class='btn s' data-a='bkgo' data-b='"+b.id+"'>ابدأ</button>":"")+"<button class='btn r s' data-a='bkdel' data-b='"+b.id+"'>حذف</button></td></tr>"});
+ return h+"</table></div>";
+}
+function toggleBookingRef(){var p=$("bpm"),w=$("brefwrap");if(p&&w)w.style.display=p.value==="cash"?"none":"grid"}
+function updateBookingEstimate(){var r=room($("br")&&$("br").value),h=Math.max(1,Number($("bh")&&$("bh").value)||1),total=(r?r.rate:0)*h,dep=Math.max(0,Number($("bdep")&&$("bdep").value)||0);if($("btotal"))$("btotal").textContent=money(total)+" جنيه";if($("bremaining"))$("bremaining").textContent=money(Math.max(0,total-dep))+" جنيه"}
 function lineRow(l,btn){return"<div class='line"+(l.done?" done":"")+"'><span>"+l.q+" × "+esc(l.n)+"</span><span class='row'><b>"+money(l.p*l.q)+"</b>"+(btn||"")+"</span></div>"}
 function vCafe(){
  var q="",any=false;
@@ -283,8 +286,10 @@ async function act(a,d){
   S.sales.push({id:id(),t:ck.end,r:r.n,c:r.ss.c,ms:ms,tc:tc,cc:cc,d:dc,tot:tc+cc-dc,pay:$("pm").value,shift:r.ss.shift||activeShift(),operator:r.ss.operator||(currentUser?currentUser.user:"")});r.ss=null;ck=null;$("dlg").close();toast("تم الدفع")}
  else if(a=="wsell"){var w=S.walk,t=sum(w);S.sales.push({id:id(),t:Date.now(),r:"كاشير",c:"",ms:0,tc:0,cc:t,d:0,tot:t,pay:$("wp").value,shift:activeShift(),operator:currentUser?currentUser.user:""});S.walk=[];toast("تم البيع")}
  else if(a=="wclr"){S.walk=[]}
- else if(a=="bkadd"){var b={id:id(),r:Number($("br").value),n:$("bn").value.trim(),ph:$("bp").value.trim(),d:$("bd").value,tm:$("bt").value,h:Math.max(1,Number($("bh").value)||1),createdBy:currentUser?currentUser.user:"",createdShift:activeShift()};
+ else if(a=="bkadd"){var br=room($("br").value),hours=Math.max(1,Number($("bh").value)||1),total=(br?br.rate:0)*hours,deposit=Math.max(0,Number($("bdep").value)||0),b={id:id(),r:Number($("br").value),n:$("bn").value.trim(),ph:$("bp").value.trim(),d:$("bd").value,tm:$("bt").value,h:hours,total:total,deposit:deposit,paymentMethod:$("bpm").value,paymentRef:$("bref").value.trim(),createdBy:currentUser?currentUser.user:"",createdShift:activeShift()};
   if(!b.n||!b.d||!b.tm){toast("اكتب الاسم واليوم والساعة");return}
+  if(deposit>total){toast("العربون أكبر من إجمالي الحجز");return}
+  if(b.paymentMethod!=="cash"&&deposit>0&&!b.paymentRef){toast("اكتب مرجع التحويل الإلكتروني");return}
   var s1=mins(b.tm),e1=s1+b.h*60,bad=S.bk.some(function(x){return x.r==b.r&&x.d==b.d&&s1<mins(x.tm)+x.h*60&&mins(x.tm)<e1});
   if(bad){toast("الغرفة محجوزة في الوقت ده");return}S.bk.push(b);toast("تم حفظ الحجز")}
  else if(a=="bkdel"){S.bk=S.bk.filter(function(x){return x.id!=d.b})}
