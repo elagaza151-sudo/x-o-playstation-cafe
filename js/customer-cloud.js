@@ -29,24 +29,30 @@
     },
     async createBooking(payload) {
       const result = await submitPublic({ action: 'booking', ...payload });
-      if (result.id) {
+      if (result.id && result.trackingToken) {
         const ids = JSON.parse(localStorage.getItem('xo_my_bookings_v1') || '[]');
-        if (!ids.includes(result.id)) localStorage.setItem('xo_my_bookings_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        const entries = ids.filter(x => (typeof x === 'string' ? x : x.id) !== result.id);
+        entries.unshift({ id: result.id, trackingToken: result.trackingToken });
+        localStorage.setItem('xo_my_bookings_v1', JSON.stringify(entries.slice(0, 30)));
         localStorage.setItem('xo_last_booking_status_' + result.id, 'pending');
       }
       return result;
     },
     async createOrder(payload) {
       const result = await submitPublic({ action: 'order', ...payload });
-      if (result.id) {
+      if (result.id && result.trackingToken) {
         const ids = JSON.parse(localStorage.getItem('xo_my_orders_v1') || '[]');
-        if (!ids.includes(result.id)) localStorage.setItem('xo_my_orders_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        const entries = ids.filter(x => (typeof x === 'string' ? x : x.id) !== result.id);
+        entries.unshift({ id: result.id, trackingToken: result.trackingToken });
+        localStorage.setItem('xo_my_orders_v1', JSON.stringify(entries.slice(0, 30)));
         localStorage.setItem('xo_last_order_status_' + result.id, 'new');
       }
       return result;
     },
-    async getStatus(kind, id) {
-      return submitPublic({ action: 'status', kind, id });
+    async getStatus(kind, reference) {
+      const entry = typeof reference === 'string' ? { id: reference, trackingToken: '' } : (reference || {});
+      if (!entry.id || !entry.trackingToken) throw new Error('رمز متابعة الطلب غير متاح على هذا الجهاز');
+      return submitPublic({ action: 'status', kind, id: entry.id, trackingToken: entry.trackingToken });
     },
     async registerTournament(id, name, phone) {
       return submitPublic({ action: 'register', tournamentId: id, name, phone });
