@@ -6,7 +6,7 @@
   function notify(title,body,type){
     var items=read(),item={id:Date.now()+'_'+Math.random().toString(36).slice(2),title:title,body:body||'',type:type||'info',at:new Date().toISOString(),read:false};
     items.unshift(item);write(items);render();toast(title+(body?' — '+body:''));
-    if(document.visibilityState==='visible'&&'Notification'in window&&Notification.permission==='granted'){
+    if('Notification'in window&&Notification.permission==='granted'){
       try{new Notification(title,{body:body||'',tag:item.id})}catch(e){}
     }
     window.dispatchEvent(new CustomEvent('xo-notification',{detail:item}));
