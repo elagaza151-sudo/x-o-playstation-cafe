@@ -8,10 +8,17 @@
   window.xoManagerCloud = {
     get profile() { return profile; },
     get shared() { return shared; },
-    async login(email, password) {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const { data: p, error: pe } = await sb.from('staff_profiles').select('*').eq('user_id', data.user.id).eq('active', true).single();
+    async login(username, password) {
+      const response = await fetch(window.XO_SUPABASE_URL + '/functions/v1/staff-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': window.XO_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({ username, password })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+      const { data: sessionData, error: sessionError } = await sb.auth.setSession({ access_token: result.access_token, refresh_token: result.refresh_token });
+      if (sessionError) throw sessionError;
+      const { data: p, error: pe } = await sb.from('staff_profiles').select('*').eq('user_id', sessionData.user.id).eq('active', true).single();
       if (pe || !p) { await sb.auth.signOut(); throw new Error('الحساب غير مضاف كموظف نشط. اطلب من المدير تفعيل صلاحيتك.'); }
       profile = p; return p;
     },
