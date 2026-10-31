@@ -32,6 +32,7 @@
       if (result.id) {
         const ids = JSON.parse(localStorage.getItem('xo_my_bookings_v1') || '[]');
         if (!ids.includes(result.id)) localStorage.setItem('xo_my_bookings_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        localStorage.setItem('xo_last_booking_status_' + result.id, 'pending');
       }
       return result;
     },
@@ -40,6 +41,7 @@
       if (result.id) {
         const ids = JSON.parse(localStorage.getItem('xo_my_orders_v1') || '[]');
         if (!ids.includes(result.id)) localStorage.setItem('xo_my_orders_v1', JSON.stringify([result.id, ...ids].slice(0, 30)));
+        localStorage.setItem('xo_last_order_status_' + result.id, 'new');
       }
       return result;
     },
