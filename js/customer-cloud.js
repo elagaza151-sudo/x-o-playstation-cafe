@@ -3,6 +3,16 @@
   window.xoSupabase = sb;
   const $ = id => document.getElementById(id);
   const state = { payment: { depositPercent: 30 }, catalog: null, tournaments: [] };
+  async function submitPublic(payload) {
+    const response = await fetch(window.XO_SUPABASE_URL + '/functions/v1/customer-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': window.XO_SUPABASE_PUBLISHABLE_KEY },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'تعذر إرسال الطلب');
+    return result;
+  }
   window.xoCustomerCloud = {
     state,
     async init() {
@@ -18,24 +28,13 @@
       return state;
     },
     async createBooking(payload) {
-      const { error } = await sb.from('bookings').insert({
-        customer_name: payload.name, room_name: payload.roomName, room_price: payload.roomPrice,
-        booking_date: payload.date, booking_time: payload.time, hours: payload.hours,
-        total: payload.total, deposit: payload.deposit, payment_method: payload.paymentMethod,
-        payment_reference: payload.paymentRef, status: 'pending', created_by: 'customer_website'
-      });
-      if (error) throw error;
+      return submitPublic({ action: 'booking', ...payload });
     },
     async createOrder(payload) {
-      const { error } = await sb.from('cafe_orders').insert({
-        customer_name: payload.customerName || null, room_name: payload.roomName || null,
-        items: payload.items, total: payload.total, status: 'new', source: 'customer_website'
-      });
-      if (error) throw error;
+      return submitPublic({ action: 'order', ...payload });
     },
     async registerTournament(id, name, phone) {
-      const { error } = await sb.from('tournament_registrations').insert({ tournament_id: id, participant_name: name, phone });
-      if (error) throw error;
+      return submitPublic({ action: 'register', tournamentId: id, name, phone });
     }
   };
   document.addEventListener('DOMContentLoaded', () => window.xoCustomerCloud.init().then(() => {
