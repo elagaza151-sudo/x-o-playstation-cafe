@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>x/o – بلايستيشن وكافيه</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0C3A36;--panel:rgba(255,255,255,.07);--ink:#F3F7F5;--muted:#9DBFB8;--line:rgba(255,255,255,.16);--pop:#FFD23F;--popink:#1E1B00;--sym:.4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#E4EFEA;--panel:rgba(255,255,255,.75);--ink:#0C3A36;--muted:#47706a;--line:rgba(12,58,54,.2);--sym:.55;color-scheme:light}}
+:root[data-theme="light"]{--bg:#E4EFEA;--panel:rgba(255,255,255,.75);--ink:#0C3A36;--muted:#47706a;--line:rgba(12,58,54,.2);--sym:.55;color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.75 Rubik,Tahoma,sans-serif;overflow-x:hidden}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.layer{position:relative;z-index:1}
+h1,h2,h3{margin:0;font-weight:900;line-height:1.15}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--pop);outline-offset:3px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-size:28px;font-weight:900;direction:ltr;text-decoration:none}
+nav a:not(.logo){text-decoration:none;margin-inline-start:20px;font-weight:500}
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding-bottom:40px}
+.big{font-size:clamp(110px,26vw,260px);font-weight:900;direction:ltr;line-height:.9;letter-spacing:-.04em;display:flex;margin:10px 0 18px}
+.big span{display:inline-block;animation:drop .9s cubic-bezier(.2,1.4,.4,1) both}
+.big span:nth-child(2){animation-delay:.12s;color:var(--pop);transform-origin:50% 90%;animation:drop .9s .12s cubic-bezier(.2,1.4,.4,1) both,sway 5s 1.2s ease-in-out infinite}
+.big span:nth-child(3){animation-delay:.24s}
+@keyframes drop{from{opacity:0;transform:translateY(-120px) rotate(-18deg) scale(.7)}to{opacity:1;transform:none}}
+@keyframes sway{50%{transform:rotate(7deg)}}
+.hero p{max-width:30ch;font-size:21px;color:var(--muted);margin:0 0 26px;animation:fade .8s .6s both}
+.cta{animation:fade .8s .8s both}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}}
+.btn{display:inline-block;background:var(--pop);color:var(--popink);border:0;border-radius:10px;padding:12px 26px;font:700 17px Rubik,sans-serif;text-decoration:none;cursor:pointer;transition:transform .12s}
+.btn:active{transform:translateY(2px) scale(.97)}
+.btn.alt{background:none;color:var(--ink);border:2px solid var(--line);margin-inline-start:10px}
+.strip{overflow:hidden;border-block:1px solid var(--line);background:var(--panel);direction:ltr;white-space:nowrap;padding:10px 0}
+.strip div{display:inline-block;animation:run 28s linear infinite;font-weight:700;color:var(--muted)}
+.strip b{color:var(--pop);margin:0 18px}
+@keyframes run{to{transform:translateX(-50%)}}
+section{padding:60px 0 20px}
+h2{font-size:40px}
+.sub{color:var(--muted);margin:6px 0 26px}
+.rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.room{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:22px;cursor:pointer;text-align:start;font:inherit;color:inherit;backdrop-filter:blur(6px);transition:transform .2s,border-color .2s}
+.room:hover{transform:translateY(-4px) rotate(-.6deg)}
+.room[aria-pressed="true"]{border-color:var(--pop);transform:translateY(-4px)}
+.room h3{font-size:26px}
+.room .p{font-size:30px;font-weight:900;color:var(--pop)}
+.room ul{padding-inline-start:18px;margin:8px 0 0;color:var(--muted)}
+.book{margin-top:20px;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;align-items:end;backdrop-filter:blur(6px)}
+label{display:grid;gap:6px;font-weight:700;font-size:15px}
+input,select{font:inherit;padding:10px 12px;border-radius:8px;border:2px solid var(--line);background:transparent;color:var(--ink)}
+select option{color:#111}
+.total{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.total strong{font-size:36px;font-weight:900;color:var(--pop)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tabs button{font:700 16px Rubik;padding:8px 20px;border-radius:999px;border:2px solid var(--line);background:none;color:var(--ink);cursor:pointer;transition:background .2s}
+.tabs button[aria-selected="true"]{background:var(--pop);color:var(--popink);border-color:var(--pop)}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px 34px}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);animation:pop .4s both}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
+.item small{grid-column:1;color:var(--muted);font-size:14px;line-height:1.5}
+.item b{font-size:18px}
+.qty{grid-row:1/3;grid-column:2;display:flex;align-items:center;gap:8px;justify-self:end;align-self:center}
+.qty button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:none;color:var(--ink);font:700 20px/1 Rubik;cursor:pointer}
+.qty button.add{background:var(--pop);color:var(--popink);border-color:var(--pop)}
+.qty span{min-width:18px;text-align:center;font-weight:700}
+.price{grid-column:1}
+#bar{position:fixed;inset-inline:0;bottom:0;z-index:5;background:var(--pop);color:var(--popink);padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
+#bar.on{transform:none}
+#bar input{border-color:rgba(0,0,0,.35);color:#111;max-width:150px;padding:8px 10px}
+#bar button{background:#1E1B00;color:#FFD23F;border:0;border-radius:8px;padding:10px 20px;font:700 16px Rubik;cursor:pointer}
+footer{padding:50px 0 120px;text-align:center;color:var(--muted)}
+footer .logo{display:inline-block;color:var(--ink);font-size:44px}
+@media (max-width:720px){h2{font-size:32px}}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Motion polish: subtle, on-brand, and respectful of reduced-motion settings */
+@keyframes xoFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes xoSoftGlow{0%,100%{box-shadow:0 0 0 rgba(255,210,63,0)}50%{box-shadow:0 0 24px rgba(255,210,63,.12)}}
+@keyframes xoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes xoShimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+body{animation:xoFadeUp .55s ease-out both}
+header,.hero,main>section{animation:xoFadeUp .65s cubic-bezier(.2,.75,.25,1) both}
+.card,.room,.room-card,.product,.menu-item,article{transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease}
+.card:hover,.room:hover,.room-card:hover,.product:hover,.menu-item:hover,article:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.16);border-color:rgba(255,210,63,.38)}
+button,.btn,a{transition:transform .18s ease,filter .2s ease,box-shadow .2s ease}
+button:hover,.btn:hover{filter:brightness(1.06)}
+button:active,.btn:active{transform:scale(.97)}
+.logo{animation:xoSoftGlow 4s ease-in-out infinite}
+#bar.on{animation:xoFadeUp .32s ease-out both}
+
+@media (prefers-reduced-motion:reduce){body,header,nav,.card,.logo,.tag,#toast.on{animation:none!important}*,*::before,*::after{transition:none!important}}
+
+/* Extra Wave motion pack */
+:root{scroll-behavior:smooth}
+body{animation:waveAmbient 14s ease-in-out infinite alternate}
+@keyframes waveAmbient{0%{background-position:0% 0%}100%{background-position:100% 40%}}
+header,.hero,.top,.brand,.logo{animation:waveDrop .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes waveDrop{from{opacity:0;transform:translateY(-18px) scale(.985);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.card,.room,.room-card,.booking-card,.stat,.panel{animation:waveRise .65s cubic-bezier(.16,1,.3,1) both;transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease}
+@keyframes waveRise{from{opacity:0;transform:translateY(18px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+.card:hover,.room:hover,.room-card:hover,.booking-card:hover,.stat:hover,.panel:hover{transform:translateY(-5px);box-shadow:0 14px 32px #0003,0 0 0 1px #FFD23F35;border-color:#FFD23F88}
+button,.btn,a.button{position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .25s ease,filter .25s ease}
+button:hover,.btn:hover,a.button:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 7px 18px #0003,0 0 16px #FFD23F30}
+button:active,.btn:active,a.button:active{transform:scale(.96)}
+button::after,.btn::after,a.button::after{content:"";position:absolute;top:-80%;left:-70%;width:42%;height:260%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff45,transparent);transition:left .65s ease;pointer-events:none}
+button:hover::after,.btn:hover::after,a.button:hover::after{left:140%}
+input,select,textarea{transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#FFD23F!important;box-shadow:0 0 0 3px #FFD23F26,0 0 18px #FFD23F15;transform:translateY(-1px)}
+.logo{animation:logoPulse 4s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 0 #FFD23F00)}50%{filter:drop-shadow(0 0 10px #FFD23F80)}}
+.tag,.badge,.status{animation:tagGlow 3s ease-in-out infinite}
+@keyframes tagGlow{0%,100%{box-shadow:0 0 0 #FFD23F00}50%{box-shadow:0 0 12px #FFD23F28}}
+tr{transition:background .2s ease}
+tbody tr:hover,tr:hover{background:#FFD23F0D}
+nav button[aria-selected="true"]{animation:activeTab .35s ease both;box-shadow:0 0 0 1px #FFD23F55,0 5px 18px #FFD23F16}
+@keyframes activeTab{from{transform:scale(.96)}to{transform:scale(1)}}
+#toast.on{animation:toastPop .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes toastPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* Keep animation tasteful and respect accessibility settings */
+@media(prefers-reduced-motion:reduce){body,header,.hero,.top,.brand,.logo,.card,.room,.room-card,.booking-card,.stat,.panel,.tag,.badge,.status,#toast.on{animation:none!important}*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+
+/* X/O community tools */
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:18px 0}.toolcard{background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.13);border-radius:20px;padding:20px;backdrop-filter:blur(12px)}.toolcard h3{margin:0 0 8px}.toolcard input,.toolcard textarea,.toolcard select{width:100%;padding:12px;border-radius:12px;border:1px solid #ffffff30;background:#092f2c;color:#fff;margin:6px 0 12px}.toolbtn{border:0;border-radius:12px;padding:12px 18px;background:#2ee6b8;color:#073a34;font-weight:900;cursor:pointer}.toolresult{white-space:pre-line;background:#062c29;padding:14px;border-radius:12px;margin-top:12px;min-height:40px}.wheelwrap{display:grid;place-items:center;gap:14px}.wheel{width:min(300px,78vw);height:auto;aspect-ratio:1;border-radius:50%;border:8px solid #f3f7f5;display:block;transition:transform 3.5s cubic-bezier(.12,.75,.12,1);box-shadow:0 10px 35px #0006}.pointer{font-size:28px;margin-bottom:-20px;z-index:1}.tourcard{border:1px solid #ffffff25;background:#ffffff0c;padding:16px;border-radius:16px;margin:12px 0}.tourcard h3{margin:0 0 8px}
+
+/* X/O opening sequence + one-by-one icon entrance */
+#xo-intro{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#0C3A36;color:#F3F7F5;pointer-events:none;animation:xoIntroOut .75s ease 1.25s forwards}
+#xo-intro .mark{direction:ltr;font:900 clamp(76px,18vw,150px)/1 Rubik,Tahoma,sans-serif;letter-spacing:-.08em;display:flex;gap:.04em;align-items:center}
+#xo-intro .mark span{display:inline-block;opacity:0;animation:xoMarkIn .55s cubic-bezier(.16,1,.3,1) forwards}
+#xo-intro .mark span:nth-child(1){animation-delay:.12s}#xo-intro .mark span:nth-child(2){color:#FFD23F;animation-delay:.32s}#xo-intro .mark span:nth-child(3){animation-delay:.52s}
+#xo-intro .line{position:absolute;bottom:calc(50% - 100px);width:min(190px,45vw);height:3px;border-radius:9px;background:linear-gradient(90deg,transparent,#FFD23F,transparent);transform:scaleX(0);transform-origin:center;animation:xoLine .65s .62s ease forwards}
+@keyframes xoMarkIn{from{opacity:0;transform:translateY(35px) scale(.65) rotate(-12deg);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes xoLine{to{transform:scaleX(1)}}
+@keyframes xoIntroOut{to{opacity:0;visibility:hidden}}
+.xo-icon-pop{display:inline-block;transform-origin:center;animation:xoIconIn .48s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--xo-delay,0ms)}
+@keyframes xoIconIn{from{opacity:0;transform:translateY(12px) scale(.35) rotate(-18deg);filter:blur(3px)}65%{opacity:1;transform:translateY(-3px) scale(1.16) rotate(5deg);filter:blur(0)}to{opacity:1;transform:none}}
+.xo-stagger-in{animation:xoFadeUp .55s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--xo-delay,0ms)}
+@media(prefers-reduced-motion:reduce){#xo-intro{display:none}.xo-icon-pop,.xo-stagger-in{animation:none!important}}
+
+</style>
+</head>
+<body>
+<div id="xo-intro" aria-hidden="true"><div class="mark"><span>x</span><span>/</span><span>o</span></div><div class="line"></div></div>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="layer">
+<header class="wrap hero">
+  <nav><a class="logo" href="#top">x/o</a><div><a href="#rooms">الغرف</a><a href="#cafe">الكافيه</a><a href="#community">العب وشارك</a><a href="#tournaments">البطولات</a><a href="#info">مواعيدنا</a></div></nav>
+  <div id="top" style="margin-top:auto">
+    <h1 class="big" aria-label="x/o"><span>x</span><span>/</span><span>o</span></h1>
+    <p>غرف بلايستيشن 5 خاصة وكافيه جنبها. احجز غرفتك وتعالى لقيها جاهزة.</p>
+    <div class="cta"><a class="btn" href="#rooms">احجز غرفة</a><a class="btn alt" href="#cafe">اطلب من الكافيه</a></div>
+  </div>
+</header>
+<div class="strip" aria-hidden="true"><div id="mq"></div></div>
+
+<main class="wrap">
+<section id="rooms">
+  <h2>الغرف</h2>
+  <p class="sub">اختار الغرفة، حدد اليوم والمدة، والسعر بيتحسب لوحده.</p>
+  <div class="rooms" id="roomList"></div>
+  <div class="book">
+    <label>الاسم<input id="name" placeholder="اسمك"></label>
+    <label>اليوم<input id="date" type="date"></label>
+    <label>الساعة<input id="time" type="time" value="18:00"></label>
+    <label>المدة<select id="hours"><option value="1">ساعة</option><option value="2" selected>ساعتين</option><option value="3">3 ساعات</option><option value="4">4 ساعات</option><option value="5">5 ساعات</option></select></label>
+    <label>طريقة دفع العربون<select id="payMethod"><option value="instapay">إنستا باي</option><option value="bank">تحويل بنكي</option><option value="wallet">محفظة إلكترونية</option></select></label>
+    <label>رقم مرجع التحويل<input id="payRef" placeholder="رقم العملية بعد الدفع"></label>
+    <div class="total"><div>الإجمالي: <strong id="total">0</strong> جنيه<br><small>العربون المطلوب: <b id="deposit">0</b> جنيه</small></div><button class="btn" id="send">إرسال طلب الحجز</button></div>
+    <p class="sub" style="grid-column:1/-1;margin:0">الحجز يظل في انتظار تأكيد العامل حتى مراجعة العربون والضغط على تأكيد من لوحة التشغيل.</p>
+    <div id="paymentDetails" style="grid-column:1/-1;color:var(--muted)"></div>
+  </div>
+</section>
+
+<section id="cafe">
+  <h2>الكافيه</h2>
+  <p class="sub">ضيف اللي نفسك فيه واكتب رقم غرفتك، والطلب يوصلك وانت بتلعب.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="menu" id="menu"></div>
+</section>
+
+<section id="community"><h2>العب وشارك 🎮</h2><p class="sub">أدوات ممتعة لتنظيم اللعب والتحديات مع أصحابك.</p>
+<div class="toolgrid">
+ <div class="toolcard"><h3>🤖 مساعد X/O الذكي</h3><p class="sub">ساعدك ترتب خطة لعب وتقسم الفرق بشكل عادل.</p><label>اللعبة<select id="aiGame"><option>EA SPORTS FC</option><option>UFC</option><option>Tekken</option><option>لعبة جماعية أخرى</option></select></label><label>عدد اللاعبين<input id="aiCount" type="number" min="2" max="20" value="4"></label><label>أسماء اللاعبين (كل اسم في سطر)<textarea id="aiNames" rows="3" placeholder="أحمد&#10;عمر&#10;يوسف&#10;محمود"></textarea></label><label>نوع المساعدة<select id="aiTask"><option value="teams">توزيع فرق عشوائية</option><option value="fc">اختيار فرق FC عشوائية</option><option value="plan">خطة جلسة لعب</option><option value="rules">اقتراح قوانين تحدي</option></select></label><label>عدد الماتشات<input id="aiMatches" type="number" min="1" max="10" value="3"></label><label>مستوى الفرق<select id="aiLevel"><option value="high">مستوى عالي</option><option value="normal">مستوى عادي</option><option value="mixed">متنوع</option></select></label><button class="toolbtn" id="aiGo">ساعدني ✨</button><label>اسأل AI سؤال حر<textarea id="aiQuestion" rows="3" placeholder="اكتب سؤالك هنا"></textarea></label><button class="toolbtn" id="aiAsk">اسأل المساعد</button><div class="toolresult" id="aiAnswer">المساعد التجريبي جاهز لاستقبال سؤالك.</div><div class="toolresult" id="aiResult">اكتب أسماء أصحابك واختار المساعدة.</div></div>
+ <div class="toolcard"><h3>🎡 عجلة الحظ لتقسيم الفرق</h3><p class="sub">ضيف أسماء اللاعبين ولف العجلة لاختيار لاعب عشوائي.</p><label>أسماء اللاعبين (كل اسم في سطر)<textarea id="wheelNames" rows="3" placeholder="أحمد&#10;عمر&#10;يوسف&#10;محمود"></textarea></label><div class="wheelwrap"><div class="pointer">▼</div><canvas class="wheel" id="wheel" width="600" height="600" aria-label="عجلة أسماء اللاعبين"></canvas><button class="toolbtn" id="spin">لف العجلة!</button><div class="toolresult" id="wheelResult">مين هيكون الاختيار الأول؟</div></div></div>
+</div></section>
+<section id="tournaments"><h2>🏆 بطولات X/O</h2><p class="sub">شارك في البطولات والتحديات القادمة.</p><div id="publicTournaments"><p class="sub">مفيش بطولات معلنة حاليًا. تابعنا قريبًا!</p></div></section>
+</main>
+
+<footer id="info">
+  <div class="wrap">
+    <a class="logo" href="#top">x/o</a>
+    <p>كل يوم من 12 الضهر لـ 2 الصبح<br>اكتب عنوان المكان هنا · واتساب 0100 000 0000</p>
+  </div>
+</footer>
+</div>
+
+<div id="bar" role="region" aria-label="طلب الكافيه">
+  <div><b id="cnt">0</b> صنف · <b id="sum">0</b> جنيه</div>
+  <input id="rm" placeholder="رقم الغرفة" aria-label="رقم الغرفة">
+  <button id="order">ابعت الطلب</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/customer-cloud.js"></script>
+<script>
+function $(i){return document.getElementById(i)}
+function money(n){return Number(n).toLocaleString("ar-EG")}
+/* ---------- live background ---------- */
+(function(){
+ var c=$("bg"),x=c.getContext("2d"),W,H,dpr=Math.min(devicePixelRatio||1,2),mx=-999,my=-999,S=[];
+ var cols=["#2EE6B8","#FF5A6E","#6F9BFF","#FF8FD8"],reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+ function size(){W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}
+ function mk(){S=[];var n=Math.round(Math.min(46,W*H/26000));for(var i=0;i<n;i++)S.push({t:i%4,x:Math.random()*W,y:Math.random()*H,r:14+Math.random()*26,a:Math.random()*6.28,va:(Math.random()-.5)*.012,vx:(Math.random()-.5)*.35,vy:-.15-Math.random()*.4,col:cols[i%4],ox:0,oy:0})}
+ function shape(s){x.save();x.translate(s.x+s.ox,s.y+s.oy);x.rotate(s.a);x.beginPath();var r=s.r;
+  if(s.t==0){x.moveTo(0,-r);x.lineTo(r*.9,r*.7);x.lineTo(-r*.9,r*.7);x.closePath()}
+  else if(s.t==1){x.arc(0,0,r*.85,0,6.283)}
+  else if(s.t==2){x.moveTo(-r*.8,-r*.8);x.lineTo(r*.8,r*.8);x.moveTo(r*.8,-r*.8);x.lineTo(-r*.8,r*.8)}
+  else{x.rect(-r*.75,-r*.75,r*1.5,r*1.5)}
+  x.stroke();x.restore()}
+ function frame(){
+  x.clearRect(0,0,W,H);
+  var al=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sym"))||.4;
+  x.globalAlpha=al;x.lineWidth=3;x.lineCap="round";x.lineJoin="round";
+  S.forEach(function(s){
+   s.x+=s.vx;s.y+=s.vy;s.a+=s.va;
+   if(s.y<-60)s.y=H+60;if(s.x<-60)s.x=W+60;if(s.x>W+60)s.x=-60;
+   var dx=s.x-mx,dy=s.y-my,d=Math.sqrt(dx*dx+dy*dy);
+   if(d<150&&d>0){s.ox+=(dx/d)*(150-d)*.06;s.oy+=(dy/d)*(150-d)*.06}
+   s.ox*=.94;s.oy*=.94;x.strokeStyle=s.col;shape(s)});
+  if(!reduce)requestAnimationFrame(frame)}
+ addEventListener("pointermove",function(e){mx=e.clientX;my=e.clientY});
+ addEventListener("pointerleave",function(){mx=my=-999});
+ addEventListener("resize",function(){size();mk()});
+ size();mk();frame();
+})();
+/* ---------- marquee ---------- */
+(function(){var t=["FIFA","UFC","Gran Turismo","Spider-Man","Mortal Kombat","Tekken","Call of Duty","It Takes Two"],h="";
+ for(var k=0;k<4;k++)t.forEach(function(g){h+=g+"<b>△</b>"});$("mq").innerHTML=h})();
+/* ---------- rooms ---------- */
+var ROOMS=[
+ {n:"غرفة VIP",p:120,f:["PS5 + شاشة 55 بوصة","لحد 4 أفراد","تكييف وباب خاص"]},
+ {n:"غرفة VIP 2",p:120,f:["PS5 + شاشة كبيرة","لحد 4 أفراد","خصوصية وراحة"]},
+ {n:"غرفة VIP 3",p:120,f:["PS5 + شاشة كبيرة","لحد 4 أفراد","خصوصية وراحة"]},
+ {n:"غرفة عائلية",p:90,f:["PS5 + شاشة 50 بوصة","لحد 6 أفراد","ألعاب جماعية وعائلية"]},
+ {n:"غرفة عائلية 2",p:90,f:["PS5 + شاشة 50 بوصة","لحد 6 أفراد","ألعاب جماعية وعائلية"]},
+ {n:"الصالة المفتوحة",p:50,f:["جهاز PS5 على الساعة","لفرد أو اتنين","جنب الكافيه مباشرة"]},
+ {n:"الصالة 2",p:50,f:["جهاز PS5 على الساعة","لفرد أو اتنين","جنب الكافيه مباشرة"]},
+ {n:"الصالة 3",p:50,f:["جهاز PS5 على الساعة","لفرد أو اتنين","جنب الكافيه مباشرة"]},
+ {n:"غرفة VIP 4",p:120,f:["PS5 + شاشة كبيرة","لحد 4 أفراد","خصوصية وراحة"]},
+ {n:"الصالة 4",p:50,f:["جهاز PS5 على الساعة","لفرد أو اتنين","جنب الكافيه مباشرة"]},
+ {n:"غرفة عائلية 3",p:90,f:["PS5 + شاشة 50 بوصة","لحد 6 أفراد","ألعاب جماعية وعائلية"]},
+ {n:"الصالة 5",p:50,f:["جهاز PS5 على الساعة","لفرد أو اتنين","جنب الكافيه مباشرة"]}
+];
+var sel=ROOMS[0],shown=0,list=$("roomList");
+function renderRooms(){list.innerHTML="";
+ ROOMS.forEach(function(r){var b=document.createElement("button");b.className="room";b.setAttribute("aria-pressed",r===sel);
+  b.innerHTML="<h3>"+r.n+"</h3><div class='p'>"+money(r.p)+" جنيه / ساعة</div><ul>"+r.f.map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul>";
+  b.onclick=function(){sel=r;renderRooms();calc()};list.appendChild(b)})}
+function calc(){var to=sel.p*Number($("hours").value),from=shown,t0=performance.now();
+ (function st(t){var k=Math.min(1,(t-t0)/350);shown=Math.round(from+(to-from)*k);$("total").textContent=money(shown);if($("deposit"))refreshPaymentDetails();if(k<1)requestAnimationFrame(st)})(t0)}
+$("hours").onchange=calc;
+$("date").value=new Date().toISOString().slice(0,10);
+function refreshPaymentDetails(){
+ var cfg=window.xoCustomerCloud.state.payment||{},pct=Number(cfg.depositPercent==null?30:cfg.depositPercent);
+ $("deposit").textContent=money(Math.ceil(sel.p*Number($("hours").value)*pct/100));
+ var method=$("payMethod").value;
+ var details=method==="instapay"?(cfg.instapay||"رقم إنستا باي غير مضاف من المدير") : method==="bank"?(cfg.bank||"بيانات الحساب البنكي غير مضافة من المدير") :(cfg.wallet||"بيانات المحفظة غير مضافة من المدير");
+ $("paymentDetails").textContent="بيانات الدفع: "+details+" · نسبة العربون: "+pct+"%";
+}
+$("payMethod").onchange=refreshPaymentDetails;
+$("hours").addEventListener("change",refreshPaymentDetails);
+$("send").onclick=async function(){
+ var name=$("name").value.trim(),date=$("date").value,time=$("time").value,h=Number($("hours").value);
+ var cfg=window.xoCustomerCloud.state.payment||{},pct=Number(cfg.depositPercent==null?30:cfg.depositPercent),total=sel.p*h,deposit=Math.ceil(total*pct/100),ref=$("payRef").value.trim();
+ if(!name||!date||!time){alert("اكتب الاسم واليوم والساعة");return}
+ if(!ref){alert("ادفع العربون أولاً واكتب رقم مرجع التحويل");return}
+ try{await window.xoCustomerCloud.createBooking({name:name,roomName:sel.n,roomPrice:sel.p,date:date,time:time,hours:h,total:total,deposit:deposit,paymentMethod:$("payMethod").value,paymentRef:ref});
+ alert("تم إرسال طلب الحجز بنجاح. الحجز غير مؤكد حتى يراجعه العامل ويؤكده من لوحة التشغيل.");$("payRef").value="";
+ }catch(e){console.error(e);alert("تعذر إرسال الحجز. تأكد من الاتصال وحاول مرة أخرى.")}
+};
+refreshPaymentDetails();
+/* ---------- cafe ---------- */
+var MENU={
+ "قهوة":[["قهوة تركي","سادة أو مظبوط أو زيادة",35],["إسبريسو","شوت مركز",40],["كابتشينو","فوم كريمي وكاكاو",55],["لاتيه","حليب مخفوق على إسبريسو",58],["فلات وايت","شوتين وحليب ناعم",62],["نسكافيه","بالحليب أو سادة",40]],
+ "مشروبات باردة":[["آيس لاتيه","إسبريسو وحليب وتلج",65],["آيس موكا","شوكولاتة وقهوة",70],["كولد برو","قهوة متخمرة على البارد",68],["موهيتو","ليمون ونعناع وصودا",55],["ريد بول","علبة",60],["مياه معدنية","",15]],
+ "عصاير وسموذي":[["عصير مانجا","طازج",55],["فراولة بالحليب","",55],["ليمون بالنعناع","",45],["سموذي ميكس بيري","توت وفراولة وزبادي",70],["ميلك شيك أوريو","",75],["كوكتيل فواكه","",65]],
+ "أكل":[["ساندوتش بيتزا","موتزاريلا وصوص ومشروم",80],["برجر لحمة","مع بطاطس",120],["تشيكن كرسبي","ثلاث قطع مع صوص",95],["باستا ألفريدو","فراخ وكريمة",110],["ناتشوز بالجبنة","مع صوص هالبينو",65],["هوت دوج","مع بطاطس",70]],
+ "سناكس وحلويات":[["بطاطس مقلية","",45],["بوب كورن","حلو أو مملح",30],["وافل نوتيلا","",75],["كوكيز دافية","اتنين مع آيس كريم",60],["براونيز","",50],["تشيز كيك","قطعة",70]]
+};
+var tabs=$("tabs"),menu=$("menu"),cur=Object.keys(MENU)[0],cart={};
+function key(k,i){return k+"|"+i}
+function renderMenu(){tabs.innerHTML="";
+ Object.keys(MENU).forEach(function(k){var b=document.createElement("button");b.textContent=k;b.setAttribute("role","tab");b.setAttribute("aria-selected",k===cur);b.onclick=function(){cur=k;renderMenu()};tabs.appendChild(b)});
+ menu.innerHTML="";
+ MENU[cur].forEach(function(it,i){var id=key(cur,i),d=document.createElement("div");d.className="item";d.style.animationDelay=i*50+"ms";
+  d.innerHTML="<div><b>"+it[0]+"</b></div><div class='qty'></div><small>"+(it[1]?it[1]+" · ":"")+money(it[2])+" جنيه</small>";
+  var q=d.querySelector(".qty");drawQty(q,id);menu.appendChild(d)})}
+function drawQty(q,id){var n=cart[id]||0;q.innerHTML=n?"<button aria-label='نقص'>−</button><span>"+n+"</span><button class='add' aria-label='زود'>+</button>":"<button class='add' aria-label='ضيف'>+</button>";
+ var bs=q.querySelectorAll("button");bs[bs.length-1].onclick=function(){cart[id]=n+1;drawQty(q,id);bar()};
+ if(n)bs[0].onclick=function(){cart[id]=n-1;if(!cart[id])delete cart[id];drawQty(q,id);bar()}}
+function bar(){var c=0,s=0,p;for(var id in cart){p=id.split("|");c+=cart[id];s+=cart[id]*MENU[p[0]][p[1]][2]}
+ $("cnt").textContent=money(c);$("sum").textContent=money(s);$("bar").classList.toggle("on",c>0)}
+$("order").onclick=async function(){var items=[],s=0,p,it;for(var id in cart){p=id.split("|");it=MENU[p[0]][p[1]];items.push({name:it[0],category:p[0],quantity:cart[id],unit_price:it[2]});s+=cart[id]*it[2]}
+ if(!items.length)return;try{await window.xoCustomerCloud.createOrder({roomName:$("rm").value.trim(),items:items,total:s});alert("تم إرسال طلبك للكاشير بنجاح!");cart={};renderMenu();bar()}catch(e){console.error(e);alert("تعذر إرسال الطلب. حاول مرة أخرى.")}};
+
+// Community tools (local prototype; connect to an AI API/Supabase for live multi-device use)
+function playerNames(id){return $(id).value.split(/\n|,/).map(function(x){return x.trim()}).filter(Boolean)}
+function showTournaments(){var ts=window.xoCustomerCloud.state.tournaments||[],box=$("publicTournaments");if(!ts.length){box.innerHTML='<p class="sub">مفيش بطولات معلنة حاليًا. تابعنا قريبًا!</p>';return}box.innerHTML=ts.map(function(t){return '<article class="tourcard"><h3>🏆 '+safeText(t.name)+'</h3><p>'+safeText(t.game||'')+' · '+safeText(t.tournament_date||'')+'</p><p>'+safeText(t.rules||'')+'</p><b>الجائزة: '+safeText(t.prize||'يتم الإعلان عنها')+'</b><p>طريقة اللعب: '+safeText(t.format||'')+'</p><p>'+safeText(t.details||'')+'</p><label>اسمك<input class="regname" placeholder="الاسم"></label><label>رقم الموبايل<input class="regphone" placeholder="رقم التواصل"></label><button class="toolbtn registerTour" data-id="'+safeText(t.id)+'">سجل في البطولة</button><small class="regmsg"></small></article>'}).join('')}
+$('publicTournaments').addEventListener('click',async function(e){var b=e.target.closest('.registerTour');if(!b)return;var c=b.closest('.tourcard'),nm=c.querySelector('.regname').value.trim(),ph=c.querySelector('.regphone').value.trim();if(!nm||!ph){c.querySelector('.regmsg').textContent='اكتب الاسم ورقم الموبايل';return}b.disabled=true;try{await window.xoCustomerCloud.registerTournament(b.dataset.id,nm,ph);c.querySelector('.regmsg').textContent='تم التسجيل بنجاح';}catch(err){console.error(err);c.querySelector('.regmsg').textContent='تعذر التسجيل. قد يكون العدد اكتمل أو الرقم مسجل بالفعل.'}finally{b.disabled=false}});
+function safeText(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+$("aiGo").onclick=function(){var names=playerNames('aiNames'),task=$('aiTask').value,game=$('aiGame').value,n=Math.max(2,Number($('aiCount').value)||4),out='';if(task==='fc'){var hi=['ريال مدريد','مانشستر سيتي','بايرن ميونخ','باريس سان جيرمان','ليفربول','برشلونة','أرسنال','إنتر ميلان'],no=['أستون فيلا','نيوكاسل','لاتسيو','روما','إشبيلية','أياكس','بورتو','مارسيليا'],lv=$('aiLevel').value,count=Math.min(10,Math.max(1,Number($('aiMatches').value)||3));out='🎮 '+game+'\n';for(var i=1;i<=count;i++){var pool=(lv==='high'?hi:lv==='normal'?no:hi.concat(no)).slice().sort(function(){return Math.random()-.5});out+='الماتش '+i+': '+pool[0]+' ضد '+pool[1]+'\n'}}else if(task==='teams'){if(names.length<2)out='اكتب اسم لاعبين على الأقل.';else{names.sort(function(){return Math.random()-.5});var t=[[],[]];names.forEach(function(x,i){t[i%2].push(x)});out='الفريق الأول: '+t[0].join('، ')+'\nالفريق الثاني: '+t[1].join('، ')}}else if(task==='plan')out='خطة لعب لـ '+game+' وعدد '+n+' لاعبين: إحماء، مباريات قصيرة، تسجيل النتائج، ثم نهائي.';else out='اتفقوا على مدة المباراة، قواعد التعادل، واللعب النظيف.';$('aiResult').textContent=out};
+$('aiAsk').onclick=function(){$('aiAnswer').textContent=$('aiQuestion').value.trim()?'تم استلام سؤالك في النسخة التجريبية. للحصول على ردود AI حقيقية يجب ربط API آمن بعد الرفع.':'اكتب سؤالك الأول.'};
+var wheelRotation=0,wheelPalette=['#ff5a6e','#6f9bff','#2ee6b8','#ffcf5a','#b58cff','#ff925a','#55c9d8','#e879c5'];function drawWheel(){var names=playerNames('wheelNames'),cv=$("wheel"),ctx=cv.getContext('2d'),cx=300,cy=300,r=286;ctx.clearRect(0,0,600,600);if(!names.length){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='#2ee6b8';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.fillText('اكتب الأسماء',cx,cy);return}var step=Math.PI*2/names.length;names.forEach(function(name,i){var a=-Math.PI/2+i*step;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+step);ctx.closePath();ctx.fillStyle=wheelPalette[i%wheelPalette.length];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);ctx.textAlign='right';ctx.fillStyle='#102b2a';ctx.font='bold '+(names.length>12?'19':'25')+'px sans-serif';var label=name.length>18?name.slice(0,17)+'…':name;ctx.fillText(label,r-24,8);ctx.restore()});ctx.beginPath();ctx.arc(cx,cy,42,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.fillStyle='#073a34';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('X/O',cx,cy)}$("wheelNames").addEventListener('input',drawWheel);drawWheel();$("spin").onclick=function(){var names=playerNames('wheelNames');if(!names.length){$("wheelResult").textContent='اكتب أسماء اللاعبين الأول.';return}var winner=names[Math.floor(Math.random()*names.length)];wheelRotation+=1440+Math.random()*720;$("wheel").style.transform='rotate('+wheelRotation+'deg)';$("wheelResult").textContent='🎉 الاختيار وقع على: '+winner};
+showTournaments();window.addEventListener('xo-cloud-ready',function(){refreshPaymentDetails();showTournaments()});
+
+renderRooms();renderMenu();calc();
+</script>
+
+<script>
+(function(){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){var intro=document.getElementById('xo-intro');if(intro)intro.remove();return;}
+  var emojiRE=/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu;
+  function animateIcons(){
+    var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.parentElement&&!n.parentElement.closest('script,style,textarea,input,select,option,code,pre,.xo-icon-pop')&&emojiRE.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
+    var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(function(node){var value=node.nodeValue;emojiRE.lastIndex=0;var frag=document.createDocumentFragment(),last=0,m,index=0;while((m=emojiRE.exec(value))){if(m.index>last)frag.appendChild(document.createTextNode(value.slice(last,m.index)));var span=document.createElement('span');span.className='xo-icon-pop';span.style.setProperty('--xo-delay',(index++*95)+'ms');span.textContent=m[0];frag.appendChild(span);last=m.index+m[0].length;}if(last<value.length)frag.appendChild(document.createTextNode(value.slice(last)));node.parentNode.replaceChild(frag,node);});
+  }
+  function staggerSections(){var els=document.querySelectorAll('nav a,nav button,.cta .btn,.room,.item,.toolcard,.tourcard,.card,.stat');els.forEach(function(el,i){if(!el.classList.contains('xo-icon-pop')){el.classList.add('xo-stagger-in');el.style.setProperty('--xo-delay',Math.min(i,16)*65+'ms');}})}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){animateIcons();staggerSections();});else{animateIcons();staggerSections();}
+  window.addEventListener('pageshow',function(e){if(e.persisted){var intro=document.getElementById('xo-intro');if(intro)intro.remove();}});
+})();
+</script>
+
+</body>
+</html>
