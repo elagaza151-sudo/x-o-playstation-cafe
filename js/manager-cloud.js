@@ -94,7 +94,22 @@
       }
       await this.refresh();
     },
+    async consumeInventory(lines, saleId, note) {
+      if (!profile) throw new Error('سجل الدخول أولاً');
+      const clean = (lines || []).filter(x => x && x.name && Number(x.quantity) > 0).map(x => ({name:String(x.name),quantity:Number(x.quantity)}));
+      if (!clean.length) return {movements:0,skipped:true};
+      const { data, error } = await sb.rpc('consume_inventory_for_sale', {p_lines:clean,p_note:note || null,p_sale_id:String(saleId)});
+      if (error) throw error;
+      await this.refresh();
+      return data;
+    },
     async updateOrder(id, status) {
+      if (status === 'delivered') {
+        const { data: order, error: readError } = await sb.from('cafe_orders').select('*').eq('id',id).single();
+        if (readError) throw readError;
+        const lines = (order.items || []).map(it => ({name:it.name,quantity:Number(it.quantity || 0)}));
+        await this.consumeInventory(lines,'web-order-'+id,'طلب موقع رقم '+id);
+      }
       const { error } = await sb.from('cafe_orders').update({ status }).eq('id', id);
       if (error) throw error; await this.refresh();
     },
