@@ -185,7 +185,7 @@ function vRooms(){
  var h="<h2>الغرف</h2><div class='grid'>";
  S.rooms.forEach(function(r){var s=r.ss,nb=nextBk(r),soon=nb&&mins(nb.tm)-nowMin()<=30&&!s;
   h+="<div class='card room"+(s?" busy":"")+(soon?" soon":"")+"' data-rs='"+r.id+"'><div class='row sp'><h3>"+esc(r.n)+"</h3><span class='tag"+(s?" on":"")+"'>"+(s?"شغالة":"فاضية")+"</span></div><div class='muted'>"+money(r.rate)+" جنيه / ساعة</div>";
-  if(s){h+="<div class='tm'>"+fmt(Date.now()-s.s)+"</div><div class='row sp'><span class='cs'>"+money(cost(r,Date.now()-s.s))+"</span><span class='muted'>جنيه وقت</span></div><div class='muted'>"+(s.c?esc(s.c)+" · ":"")+"كافيه: "+money(sum(s.o))+" جنيه ("+s.o.length+" طلب)</div><div class='row' style='margin-top:12px'><button class='btn g' data-a='addc' data-r='"+r.id+"'>+ كافيه</button><button class='btn' data-a='end' data-r='"+r.id+"'>إنهاء وحساب</button></div>"}
+  if(s){h+="<div class='tm'>"+fmt(Date.now()-s.s)+"</div><div class='row sp'><span class='cs'>"+money(cost(r,Date.now()-s.s))+"</span><span class='muted'>جنيه وقت</span></div><div class='muted'>"+(s.c?esc(s.c)+" · ":"")+"كافيه: "+money(sum(s.o))+" جنيه ("+s.o.length+" طلب)</div><div class='row' style='margin-top:12px'><button class='btn g' data-a='addc' data-r='"+r.id+"'>+ كافيه</button><button class='btn' data-a='end' data-r='"+r.id+"'>إنهاء وحساب</button><button class='btn r' data-a='cancelstart' data-r='"+r.id+"'>إلغاء فتح الغرفة</button></div>"}
   else{if(nb)h+="<div class='muted' style='margin:8px 0'>حجز "+nb.tm+" – "+esc(nb.n)+"</div>";
    h+="<div class='row' style='margin-top:12px'><input id='n"+r.id+"' placeholder='اسم الزبون (اختياري)'><button class='btn' data-a='start' data-r='"+r.id+"'>ابدأ</button></div>"}
   h+="</div>"});
@@ -340,6 +340,13 @@ async function act(a,d){
  else if(a=="add"){var o=d.r=="walk"?S.walk:room(d.r).ss.o;addLine(o,d.i);save();if(window.xoNotify)window.xoNotify.notify("تمت إضافة صنف للكافيتريا",S.menu[d.i][0]+" — "+(d.r=="walk"?"بيع مباشر":room(d.r).n),"cafe");if(d.m)openAdd(d.r);else render();return}
  else if(a=="done"){room(d.r).ss.o.forEach(function(l){if(l.id==d.l)l.done=true});if(window.xoNotify)window.xoNotify.notify("تم تسليم صنف",room(d.r).n,"cafe")}
  else if(a=="end"){openEnd(d.r);return}
+ else if(a=="cancelstart"){
+  var r=room(d.r);
+  if(!r||!r.ss){toast("الغرفة مش شغالة");return}
+  if(r.ss.o&&r.ss.o.length){toast("مينفعش تلغي الجلسة بعد إضافة طلبات كافيه؛ استخدم إنهاء وحساب");return}
+  if(!confirm("إلغاء فتح "+r.n+"؟ سيتم إيقاف الوقت بدون تسجيل فاتورة."))return;
+  r.ss=null;toast("تم إلغاء فتح الغرفة بدون حساب");
+ }
  else if(a=="pay"&&ck){var r=room(ck.rid),ms=ck.end-r.ss.s,tc=cost(r,ms),cc=sum(r.ss.o),dc=Math.min(Number($("dc").value||0),tc+cc);
   try{await window.xoManagerCloud.consumeInventory(r.ss.o.map(function(l){return{name:l.n,quantity:l.q}}),"pos-room-"+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random()),"بيع جلسة "+r.n)}catch(e){toast(e.message||"تعذر خصم الخامات؛ لم يتم إنهاء الفاتورة");return}
   S.sales.push({id:id(),t:ck.end,r:r.n,c:r.ss.c,ms:ms,tc:tc,cc:cc,d:dc,tot:tc+cc-dc,pay:$("pm").value,shift:r.ss.shift||activeShift(),operator:r.ss.operator||(currentUser?currentUser.user:"")});r.ss=null;ck=null;$("dlg").close();toast("تم الدفع");if(window.xoNotify)window.xoNotify.notify("انتهت الجلسة وتم الحساب",r.n,"session")}
