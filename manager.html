@@ -234,22 +234,29 @@ function vSet(){
  return h}
 
 function vInventory(){
- var items=sharedGet().inventory||[],moves=sharedGet().inventoryMovements||[],manager=currentUser&&currentUser.role==="مدير";
+ var z=sharedGet(),items=z.inventory||[],moves=z.inventoryMovements||[],recipes=z.inventoryRecipes||[],manager=currentUser&&currentUser.role==="مدير";
  var low=items.filter(function(x){return Number(x.quantity)<=Number(x.min_quantity)}),raw=items.filter(function(x){return x.category==="raw"}),ready=items.filter(function(x){return x.category==="ready"});
  var h="<div class='row sp'><h2>جرد الكافيه 📦</h2><span class='tag'>"+(manager?"صلاحية المدير: تعديل":"عرض فقط")+"</span></div>";
  h+="<div class='stats'><div class='card stat'><span class='muted'>إجمالي الأصناف</span><b>"+items.length+"</b></div><div class='card stat'><span class='muted'>مواد خام</span><b>"+raw.length+"</b></div><div class='card stat'><span class='muted'>منتجات جاهزة</span><b>"+ready.length+"</b></div><div class='card stat'><span class='muted'>تحتاج إعادة توريد</span><b class='neg'>"+low.length+"</b></div></div>";
- if(manager)h+="<div class='card' style='margin-bottom:14px'><h3>إضافة صنف للمخزون</h3><div class='form'><label>اسم الصنف<input id='invName' placeholder='مثال: بن اسبريسو / مياه معدنية'></label><label>النوع<select id='invCat'><option value='raw'>مادة خام / مكون</option><option value='ready'>منتج جاهز للبيع</option></select></label><label>وحدة القياس<input id='invUnit' placeholder='كيلو، لتر، قطعة، عبوة'></label><label>الكمية الحالية<input id='invQty' type='number' min='0' step='0.001' value='0'></label><label>حد التنبيه<input id='invMin' type='number' min='0' step='0.001' value='0'></label><label>تكلفة الوحدة (جنيه)<input id='invCost' type='number' min='0' step='0.01' value='0'></label><button class='btn' data-a='invsave'>إضافة للمخزون</button></div></div>";
+ if(manager)h+="<div class='card' style='margin-bottom:14px'><h3>إضافة صنف للمخزون</h3><div class='form'><label>اسم الصنف<input id='invName' placeholder='مثال: بن اسبريسو / مياه معدنية'></label><label>النوع<select id='invCat'><option value='raw'>مادة خام / مكون</option><option value='ready'>منتج جاهز للبيع</option></select></label><label>وحدة القياس<input id='invUnit' placeholder='جرام، مل، قطعة، عبوة'></label><label>الكمية الحالية<input id='invQty' type='number' min='0' step='0.001' value='0'></label><label>حد التنبيه<input id='invMin' type='number' min='0' step='0.001' value='0'></label><label>تكلفة الوحدة (جنيه)<input id='invCost' type='number' min='0' step='0.01' value='0'></label><button class='btn' data-a='invsave'>إضافة للمخزون</button></div></div>";
  h+="<div class='card scroll'><h3>المخزون الحالي</h3><table><tr><th>الصنف</th><th>الفئة</th><th>الكمية</th><th>حد التنبيه</th><th>الحالة</th>"+(manager?"<th>إجراءات المدير</th>":"")+"</tr>";
- if(!items.length)h+="<tr><td colspan='"+(manager?6:5)+"' class='muted'>لسه مفيش أصناف في الجرد. المدير يقدر يضيف المواد الخام والمنتجات الجاهزة.</td></tr>";
+ if(!items.length)h+="<tr><td colspan='"+(manager?6:5)+"' class='muted'>لسه مفيش أصناف في الجرد.</td></tr>";
  items.forEach(function(x){var isLow=Number(x.quantity)<=Number(x.min_quantity);h+="<tr><td><b>"+esc(x.name)+"</b><div class='muted'>"+esc(x.unit)+" · تكلفة الوحدة "+money(x.unit_cost)+" ج</div></td><td>"+(x.category==="raw"?"مواد خام":"منتج جاهز")+"</td><td><b>"+Number(x.quantity).toLocaleString("en-US")+" "+esc(x.unit)+"</b></td><td>"+Number(x.min_quantity).toLocaleString("en-US")+" "+esc(x.unit)+"</td><td>"+(isLow?"<span class='tag' style='color:var(--bad)'>مخزون منخفض</span>":"<span class='tag on'>متوفر</span>")+"</td>";
- if(manager)h+="<td><div class='row'><button class='btn s' data-a='invadd' data-id='"+x.id+"'>إضافة كمية</button><button class='btn g s' data-a='invremove' data-id='"+x.id+"'>صرف كمية</button><button class='btn g s' data-a='invset' data-id='"+x.id+"'>تسوية</button><button class='btn r s' data-a='invdel' data-id='"+x.id+"'>إخفاء</button></div></td>";
- h+="</tr>"});
- h+="</table></div><div class='card scroll' style='margin-top:14px'><h3>آخر حركات المخزون</h3><table><tr><th>التاريخ</th><th>الصنف</th><th>الحركة</th><th>الكمية</th><th>قبل</th><th>بعد</th><th>ملاحظة</th></tr>";
+ if(manager)h+="<td><div class='row'><button class='btn s' data-a='invadd' data-id='"+x.id+"'>إضافة كمية</button><button class='btn g s' data-a='invremove' data-id='"+x.id+"'>صرف كمية</button><button class='btn g s' data-a='invset' data-id='"+x.id+"'>تسوية</button><button class='btn r s' data-a='invdel' data-id='"+x.id+"'>إخفاء</button></div></td>";h+="</tr>"});
+ h+="</table></div>";
+ if(manager){
+  h+="<div class='card' style='margin-top:14px'><h3>وصفات المنيو – خصم تلقائي للخامات</h3><p class='muted'>حدد الصنف من المنيو، ثم أضف كل مكون والكمية المستخدمة في القطعة الواحدة. الموظف يقدر يشوف الجرد فقط.</p><div class='form'><label>صنف المنيو<select id='recipeMenu'>"+S.menu.map(function(x){return"<option value='"+esc(x[0])+"'>"+esc(x[0])+"</option>"}).join("")+"</select></label><label>المكون<select id='recipeItem'>"+raw.map(function(x){return"<option value='"+x.id+"'>"+esc(x.name)+" ("+esc(x.unit)+")</option>"}).join("")+"</select></label><label>الكمية لكل وحدة<input id='recipeQty' type='number' min='0.0001' step='0.0001' placeholder='مثال: 18'></label><button class='btn' data-a='recipesave' "+(!raw.length?"disabled":"")+">إضافة مكون للوصفة</button></div>";
+  var grouped={};recipes.forEach(function(r){(grouped[r.menu_name]||(grouped[r.menu_name]=[])).push(r)});
+  h+="<h3 style='margin-top:14px'>الوصفات المسجلة</h3>";
+  if(!recipes.length)h+="<p class='muted'>لا توجد وصفات.</p>";
+  Object.keys(grouped).sort().forEach(function(n){h+="<div class='line' style='display:block'><b>"+esc(n)+"</b>"+grouped[n].map(function(r){return"<div class='row sp'><span>"+esc(r.inventory_items&&r.inventory_items.name||"مكون")+" — "+Number(r.quantity_per_unit)+" "+esc(r.inventory_items&&r.inventory_items.unit||"")+"</span><button class='btn r s' data-a='recipedelete' data-id='"+r.id+"'>حذف</button></div>"}).join("")+"</div>"});
+  h+="</div>";
+ }
+ h+="<div class='card scroll' style='margin-top:14px'><h3>آخر حركات المخزون</h3><table><tr><th>التاريخ</th><th>الصنف</th><th>الحركة</th><th>الكمية</th><th>قبل</th><th>بعد</th><th>ملاحظة</th></tr>";
  if(!moves.length)h+="<tr><td colspan='7' class='muted'>لا توجد حركات مسجلة.</td></tr>";
  moves.forEach(function(m){h+="<tr><td>"+new Date(m.created_at).toLocaleString("ar-EG")+"</td><td>"+esc(m.inventory_items&&m.inventory_items.name||"صنف")+"</td><td>"+({add:"إضافة",remove:"صرف",set:"تسوية"}[m.movement_type]||m.movement_type)+"</td><td>"+Number(m.quantity)+"</td><td>"+Number(m.before_quantity)+"</td><td>"+Number(m.after_quantity)+"</td><td>"+esc(m.note||"—")+"</td></tr>"});
  return h+"</table></div>";
 }
-
 function sharedGet(){return window.xoManagerCloud?window.xoManagerCloud.shared:{bookings:[],tournaments:[],settings:{}}}
 function sharedPut(z){/* Shared data is persisted through the dedicated Supabase methods below. */}
 function vWebBk(){
@@ -295,6 +302,17 @@ async function act(a,d){
  }
  if(a=="logout"){await window.xoManagerCloud.logout();currentUser=null;view="rooms";render();return}
  if(a=="tab"){if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(d.v)>=0){toast("الصلاحية دي للمدير فقط");return}view=d.v;if(view==="inventory")window.xoManagerCloud.refresh().then(render).catch(function(e){toast(e.message||"تعذر تحميل الجرد")});else render();return}
+ if(a==="recipesave"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("المدير فقط يقدر يعدل الوصفات");return}
+  var q=Number($("recipeQty").value);
+  if(!$("recipeMenu").value||!$("recipeItem").value||!(q>0)){toast("اختار الصنف والمكون واكتب كمية صحيحة");return}
+  try{await window.xoManagerCloud.saveInventoryRecipe($("recipeMenu").value,$("recipeItem").value,q);toast("تم حفظ المكون في الوصفة");render()}catch(e){toast(e.message||"تعذر حفظ الوصفة")}return
+ }
+ if(a==="recipedelete"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("المدير فقط");return}
+  if(!confirm("حذف هذا المكون من الوصفة؟"))return;
+  try{await window.xoManagerCloud.deleteInventoryRecipe(d.id);toast("تم حذف المكون");render()}catch(e){toast(e.message||"تعذر حذف المكون")}return
+ }
  if(a==="invsave"){
   if(!currentUser||currentUser.role!=="مدير"){toast("الجرد قابل للتعديل للمدير فقط");return}
   var nm=$("invName").value.trim(),unit=$("invUnit").value.trim(),qty=Number($("invQty").value),min=Number($("invMin").value),costv=Number($("invCost").value);
