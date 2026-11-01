@@ -38,7 +38,7 @@
         sb.from('pos_state').select('state').eq('id', 1).maybeSingle(),
         sb.from('cafe_orders').select('*').order('created_at', { ascending: false }),
         sb.from('tournament_registrations').select('*').order('created_at'),
-        sb.from('inventory_items').select('*').order('category').order('name'),
+        sb.from('inventory_items').select('*').eq('active',true).order('category').order('name'),
         sb.from('inventory_movements').select('*, inventory_items(name,unit)').order('created_at',{ascending:false}).limit(100)
       ]);
       if (b.error) throw b.error; if (t.error) throw t.error; if (s.error) throw s.error; if (orders.error) throw orders.error; if (regs.error) throw regs.error; if (inventory.error) throw inventory.error; if (movements.error) throw movements.error;
