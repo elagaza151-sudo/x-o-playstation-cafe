@@ -3,7 +3,7 @@
   window.xoSupabase = sb;
   let profile = null;
   let saveQueue = Promise.resolve();
-  const shared = { bookings: [], tournaments: [], settings: {} };
+  const shared = { bookings: [], tournaments: [], settings: {}, inventory: [], inventoryMovements: [] };
   const safeError = e => (e && e.message) || 'حدث خطأ في الاتصال بالخادم';
   window.xoManagerCloud = {
     get profile() { return profile; },
@@ -31,18 +31,22 @@
       return profile;
     },
     async refresh() {
-      const [b, t, s, ps, orders, regs] = await Promise.all([
+      const [b, t, s, ps, orders, regs, inventory, movements] = await Promise.all([
         sb.from('bookings').select('*').order('created_at', { ascending: false }),
         sb.from('tournaments').select('*').order('created_at', { ascending: false }),
         sb.from('app_settings').select('setting_key,setting_value'),
         sb.from('pos_state').select('state').eq('id', 1).maybeSingle(),
         sb.from('cafe_orders').select('*').order('created_at', { ascending: false }),
-        sb.from('tournament_registrations').select('*').order('created_at')
+        sb.from('tournament_registrations').select('*').order('created_at'),
+        sb.from('inventory_items').select('*').order('category').order('name'),
+        sb.from('inventory_movements').select('*, inventory_items(name,unit)').order('created_at',{ascending:false}).limit(100)
       ]);
-      if (b.error) throw b.error; if (t.error) throw t.error; if (s.error) throw s.error; if (orders.error) throw orders.error; if (regs.error) throw regs.error;
+      if (b.error) throw b.error; if (t.error) throw t.error; if (s.error) throw s.error; if (orders.error) throw orders.error; if (regs.error) throw regs.error; if (inventory.error) throw inventory.error; if (movements.error) throw movements.error;
       shared.bookings = (b.data || []).map(x => ({ id:x.id, name:x.customer_name, roomName:x.room_name, roomPrice:Number(x.room_price), date:x.booking_date, time:String(x.booking_time).slice(0,5), hours:Number(x.hours), total:Number(x.total), deposit:Number(x.deposit), paymentMethod:x.payment_method, paymentRef:x.payment_reference, status:x.status, reviewedBy:x.reviewed_by || '', createdAt:x.created_at }));
       shared.tournaments = (t.data || []).map(x => ({ id:x.id, name:x.name, game:x.game, date:x.tournament_date, rules:x.rules, prize:x.prize, format:x.format, details:x.details, capacity:x.capacity, status:x.status, participants:(regs.data||[]).filter(r=>r.tournament_id===x.id).map(r=>({id:r.id,name:r.participant_name,phone:r.phone,team:r.assigned_team})) }));
       shared.orders = orders.data || [];
+      shared.inventory = inventory.data || [];
+      shared.inventoryMovements = movements.data || [];
       shared.settings = Object.fromEntries((s.data || []).map(x => [x.setting_key, x.setting_value]));
       if (ps.data?.state && window.xoManagerApplyState) window.xoManagerApplyState(ps.data.state); else if (window.xoManagerGetState) await this.savePos(window.xoManagerGetState());
       return shared;
@@ -105,6 +109,35 @@
     async registrations(tournamentId) {
       const { data, error } = await sb.from('tournament_registrations').select('*').eq('tournament_id', tournamentId).order('created_at');
       if (error) throw error; return data || [];
+    },
+    async saveInventoryItem(item) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه تعديل الجرد');
+      const payload = { name:item.name, category:item.category, unit:item.unit, quantity:item.quantity, min_quantity:item.min_quantity, unit_cost:item.unit_cost, active:true, updated_at:new Date().toISOString() };
+      const query = item.id ? sb.from('inventory_items').update(payload).eq('id',item.id) : sb.from('inventory_items').insert({...payload,created_by:(await sb.auth.getUser()).data.user.id});
+      const { error } = await query;
+      if (error) throw error;
+      await this.refresh();
+    },
+    async adjustInventory(id, type, quantity, note) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه تعديل الكميات');
+      const item = shared.inventory.find(x=>x.id===id);
+      if (!item) throw new Error('الصنف غير موجود');
+      const amount = Number(quantity);
+      if (!(amount>0)) throw new Error('اكتب كمية صحيحة');
+      const before = Number(item.quantity), after = type==='set' ? amount : type==='add' ? before+amount : before-amount;
+      if (after<0) throw new Error('الكمية غير كافية للصرف');
+      const { error: updateError } = await sb.from('inventory_items').update({quantity:after,updated_at:new Date().toISOString()}).eq('id',id);
+      if (updateError) throw updateError;
+      const { data:u } = await sb.auth.getUser();
+      const { error } = await sb.from('inventory_movements').insert({item_id:id,movement_type:type,quantity:amount,before_quantity:before,after_quantity:after,note:note||null,created_by:u.user.id});
+      if (error) throw error;
+      await this.refresh();
+    },
+    async deleteInventoryItem(id) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه حذف الأصناف');
+      const { error } = await sb.from('inventory_items').update({active:false,updated_at:new Date().toISOString()}).eq('id',id);
+      if (error) throw error;
+      await this.refresh();
     },
     async logout() { profile = null; await sb.auth.signOut(); }
   };
