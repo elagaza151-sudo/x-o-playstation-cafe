@@ -172,11 +172,11 @@ function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTi
 function today(){var d=new Date();return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
 function mins(t){var a=t.split(":");return a[0]*60+Number(a[1])}
 function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes()}
-var TABS=[["rooms","الغرف"],["bk","الحجوزات"],["webbk","طلبات الموقع"],["cafe","الكافيه"],["acc","الحسابات"],["set","الإعدادات"],["tournaments","البطولات 🏆"],["admin","المدير"]];
+var TABS=[["rooms","الغرف"],["bk","الحجوزات"],["webbk","طلبات الموقع"],["cafe","الكافيه"],["inventory","الجرد 📦"],["acc","الحسابات"],["set","الإعدادات"],["tournaments","البطولات 🏆"],["admin","المدير"]];
 function nav(){
  if(!currentUser){$("nav").style.display="none";return}
  $("nav").style.display="flex";
- var allowed=currentUser.role==="مدير"?TABS:TABS.filter(function(t){return ["rooms","bk","webbk","cafe","acc"].indexOf(t[0])>=0});
+ var allowed=currentUser.role==="مدير"?TABS:TABS.filter(function(t){return ["rooms","bk","webbk","cafe","inventory","acc"].indexOf(t[0])>=0});
  $("nav").innerHTML=allowed.map(function(t){return"<button data-a='tab' data-v='"+t[0]+"' aria-selected='"+(view==t[0])+"'>"+t[1]+"</button>"}).join("")+"<button data-a='logout' class='g'>خروج ("+esc(currentUser.shift||"مدير")+")</button>";
 }
 function nextBk(r){var d=today(),n=nowMin();return S.bk.filter(function(b){return b.r==r.id&&b.d==d&&mins(b.tm)+b.h*60>n}).sort(function(a,b){return mins(a.tm)-mins(b.tm)})[0]}
@@ -232,6 +232,24 @@ function vSet(){
  h+="<div class='card'><h3>منيو الكافيه</h3><div style='margin-top:10px'>"+S.menu.map(function(m,i){return"<div class='row' style='margin-bottom:8px'><input id='mn"+i+"' value='"+esc(m[0])+"' style='flex:2'><input id='mp"+i+"' type='number' min='0' value='"+m[1]+"' style='flex:1'><button class='btn r s' data-a='mdel' data-i='"+i+"'>حذف</button></div>"}).join("")+"<button class='btn g' data-a='madd'>+ صنف</button></div></div></div>";
  h+="<div class='row' style='margin-top:16px'><button class='btn' data-a='sset'>حفظ الإعدادات</button><button class='btn r' data-a='reset' id='rst'>مسح كل البيانات</button></div><p class='muted'>البيانات محفوظة على الجهاز ده فقط.</p>";
  return h}
+
+function vInventory(){
+ var items=sharedGet().inventory||[],moves=sharedGet().inventoryMovements||[],manager=currentUser&&currentUser.role==="مدير";
+ var low=items.filter(function(x){return Number(x.quantity)<=Number(x.min_quantity)}),raw=items.filter(function(x){return x.category==="raw"}),ready=items.filter(function(x){return x.category==="ready"});
+ var h="<div class='row sp'><h2>جرد الكافيه 📦</h2><span class='tag'>"+(manager?"صلاحية المدير: تعديل":"عرض فقط")+"</span></div>";
+ h+="<div class='stats'><div class='card stat'><span class='muted'>إجمالي الأصناف</span><b>"+items.length+"</b></div><div class='card stat'><span class='muted'>مواد خام</span><b>"+raw.length+"</b></div><div class='card stat'><span class='muted'>منتجات جاهزة</span><b>"+ready.length+"</b></div><div class='card stat'><span class='muted'>تحتاج إعادة توريد</span><b class='neg'>"+low.length+"</b></div></div>";
+ if(manager)h+="<div class='card' style='margin-bottom:14px'><h3>إضافة صنف للمخزون</h3><div class='form'><label>اسم الصنف<input id='invName' placeholder='مثال: بن اسبريسو / مياه معدنية'></label><label>النوع<select id='invCat'><option value='raw'>مادة خام / مكون</option><option value='ready'>منتج جاهز للبيع</option></select></label><label>وحدة القياس<input id='invUnit' placeholder='كيلو، لتر، قطعة، عبوة'></label><label>الكمية الحالية<input id='invQty' type='number' min='0' step='0.001' value='0'></label><label>حد التنبيه<input id='invMin' type='number' min='0' step='0.001' value='0'></label><label>تكلفة الوحدة (جنيه)<input id='invCost' type='number' min='0' step='0.01' value='0'></label><button class='btn' data-a='invsave'>إضافة للمخزون</button></div></div>";
+ h+="<div class='card scroll'><h3>المخزون الحالي</h3><table><tr><th>الصنف</th><th>الفئة</th><th>الكمية</th><th>حد التنبيه</th><th>الحالة</th>"+(manager?"<th>إجراءات المدير</th>":"")+"</tr>";
+ if(!items.length)h+="<tr><td colspan='"+(manager?6:5)+"' class='muted'>لسه مفيش أصناف في الجرد. المدير يقدر يضيف المواد الخام والمنتجات الجاهزة.</td></tr>";
+ items.forEach(function(x){var isLow=Number(x.quantity)<=Number(x.min_quantity);h+="<tr><td><b>"+esc(x.name)+"</b><div class='muted'>"+esc(x.unit)+" · تكلفة الوحدة "+money(x.unit_cost)+" ج</div></td><td>"+(x.category==="raw"?"مواد خام":"منتج جاهز")+"</td><td><b>"+Number(x.quantity).toLocaleString("en-US")+" "+esc(x.unit)+"</b></td><td>"+Number(x.min_quantity).toLocaleString("en-US")+" "+esc(x.unit)+"</td><td>"+(isLow?"<span class='tag' style='color:var(--bad)'>مخزون منخفض</span>":"<span class='tag on'>متوفر</span>")+"</td>";
+ if(manager)h+="<td><div class='row'><button class='btn s' data-a='invadd' data-id='"+x.id+"'>إضافة كمية</button><button class='btn g s' data-a='invremove' data-id='"+x.id+"'>صرف كمية</button><button class='btn g s' data-a='invset' data-id='"+x.id+"'>تسوية</button><button class='btn r s' data-a='invdel' data-id='"+x.id+"'>إخفاء</button></div></td>";
+ h+="</tr>"});
+ h+="</table></div><div class='card scroll' style='margin-top:14px'><h3>آخر حركات المخزون</h3><table><tr><th>التاريخ</th><th>الصنف</th><th>الحركة</th><th>الكمية</th><th>قبل</th><th>بعد</th><th>ملاحظة</th></tr>";
+ if(!moves.length)h+="<tr><td colspan='7' class='muted'>لا توجد حركات مسجلة.</td></tr>";
+ moves.forEach(function(m){h+="<tr><td>"+new Date(m.created_at).toLocaleString("ar-EG")+"</td><td>"+esc(m.inventory_items&&m.inventory_items.name||"صنف")+"</td><td>"+({add:"إضافة",remove:"صرف",set:"تسوية"}[m.movement_type]||m.movement_type)+"</td><td>"+Number(m.quantity)+"</td><td>"+Number(m.before_quantity)+"</td><td>"+Number(m.after_quantity)+"</td><td>"+esc(m.note||"—")+"</td></tr>"});
+ return h+"</table></div>";
+}
+
 function sharedGet(){return window.xoManagerCloud?window.xoManagerCloud.shared:{bookings:[],tournaments:[],settings:{}}}
 function sharedPut(z){/* Shared data is persisted through the dedicated Supabase methods below. */}
 function vWebBk(){
@@ -254,7 +272,7 @@ function render(){
  if(!currentUser){loginView();return}
  nav();
  if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(view)>=0)view="rooms";
- var m=$("main");m.innerHTML=({rooms:vRooms,bk:vBk,webbk:vWebBk,cafe:vCafe,acc:vAcc,set:vSet,admin:vAdmin,tournaments:vTournaments})[view]();
+ var m=$("main");m.innerHTML=({rooms:vRooms,bk:vBk,webbk:vWebBk,cafe:vCafe,inventory:vInventory,acc:vAcc,set:vSet,admin:vAdmin,tournaments:vTournaments})[view]();
 }
 /* ---- dialogs ---- */
 function dlg(h){var d=$("dlg");d.innerHTML=h;if(!d.open)d.showModal()}
@@ -276,7 +294,27 @@ async function act(a,d){
  try{var p=await window.xoManagerCloud.login(username,pass);currentUser={id:p.user_id,user:p.display_name,role:p.role==="manager"?"مدير":"عامل",shift:p.shift_name||"شيفت 1"};await window.xoManagerCloud.refresh();view="rooms";render();toast("أهلًا "+p.display_name)}catch(e){toast(e.message||"فشل تسجيل الدخول")}return
  }
  if(a=="logout"){await window.xoManagerCloud.logout();currentUser=null;view="rooms";render();return}
- if(a=="tab"){if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(d.v)>=0){toast("الصلاحية دي للمدير فقط");return}view=d.v;render();return}
+ if(a=="tab"){if(currentUser.role!=="مدير"&&["set","admin","tournaments"].indexOf(d.v)>=0){toast("الصلاحية دي للمدير فقط");return}view=d.v;if(view==="inventory")window.xoManagerCloud.refresh().then(render).catch(function(e){toast(e.message||"تعذر تحميل الجرد")});else render();return}
+ if(a==="invsave"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("الجرد قابل للتعديل للمدير فقط");return}
+  var nm=$("invName").value.trim(),unit=$("invUnit").value.trim(),qty=Number($("invQty").value),min=Number($("invMin").value),costv=Number($("invCost").value);
+  if(!nm||!unit||qty<0||min<0||costv<0){toast("راجع بيانات الصنف والكميات");return}
+  try{await window.xoManagerCloud.saveInventoryItem({name:nm,category:$("invCat").value,unit:unit,quantity:qty,min_quantity:min,unit_cost:costv});toast("تمت إضافة الصنف للجرد");render()}catch(e){toast(e.message||"تعذر حفظ الصنف")}return
+ }
+ if(a==="invadd"||a==="invremove"||a==="invset"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("المدير فقط يقدر يعدل الكميات");return}
+  var title=a==="invadd"?"إضافة كمية":a==="invremove"?"صرف كمية":"تسوية الجرد";
+  dlg("<h3>"+title+"</h3><div class='form' style='grid-template-columns:1fr'><label>"+(a==="invset"?"الكمية الفعلية الجديدة":"الكمية")+"<input id='invMoveQty' type='number' min='0.001' step='0.001'></label><label>ملاحظة (اختياري)<input id='invMoveNote' placeholder='سبب الحركة أو رقم الفاتورة'></label><div class='row'><button class='btn g' data-a='close'>إلغاء</button><button class='btn' data-a='invcommit' data-id='"+d.id+"' data-type='"+(a==="invadd"?"add":a==="invremove"?"remove":"set")+"'>تأكيد</button></div></div>");return
+ }
+ if(a==="invcommit"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("المدير فقط يقدر يعدل الكميات");return}
+  try{await window.xoManagerCloud.adjustInventory(d.id,d.type,$("invMoveQty").value,$("invMoveNote").value.trim());$("dlg").close();toast("تم تحديث المخزون");render()}catch(e){toast(e.message||"تعذر تحديث المخزون")}return
+ }
+ if(a==="invdel"){
+  if(!currentUser||currentUser.role!=="مدير"){toast("المدير فقط يقدر يخفي الأصناف");return}
+  if(!confirm("إخفاء الصنف من قائمة الجرد؟"))return;
+  try{await window.xoManagerCloud.deleteInventoryItem(d.id);toast("تم إخفاء الصنف");render()}catch(e){toast(e.message||"تعذر إخفاء الصنف")}return
+ }
  if(a=="close"){$("dlg").close();render();return}
  if(a=="rng"){range=d.v;render();return}
  if(a=="start"){var r=room(d.r),n=$("n"+d.r);r.ss={s:Date.now(),c:n?n.value.trim():"",o:[],shift:activeShift(),operator:currentUser?currentUser.user:"",durationMs:0};toast("بدأ الوقت – "+r.n);if(window.xoNotify)window.xoNotify.notify("بدأت جلسة جديدة",r.n+(r.ss.c?" — "+r.ss.c:""),"session")}
