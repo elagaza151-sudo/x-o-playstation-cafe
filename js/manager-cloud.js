@@ -63,6 +63,7 @@
       if (error) throw error; await this.refresh();
     },
     async savePayment(settings) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه تعديل بيانات الدفع');
       const { error } = await sb.from('app_settings').upsert({ setting_key:'payment_public', setting_value:settings, updated_by:(await sb.auth.getUser()).data.user.id, updated_at:new Date().toISOString() });
       if (error) throw error;
       await this.refresh();
