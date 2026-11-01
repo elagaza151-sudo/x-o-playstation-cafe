@@ -3,7 +3,7 @@
   window.xoSupabase = sb;
   let profile = null;
   let saveQueue = Promise.resolve();
-  const shared = { bookings: [], tournaments: [], settings: {}, inventory: [], inventoryMovements: [] };
+  const shared = { bookings: [], tournaments: [], settings: {}, inventory: [], inventoryMovements: [], inventoryRecipes: [] };
   const safeError = e => (e && e.message) || 'حدث خطأ في الاتصال بالخادم';
   window.xoManagerCloud = {
     get profile() { return profile; },
@@ -31,7 +31,7 @@
       return profile;
     },
     async refresh() {
-      const [b, t, s, ps, orders, regs, inventory, movements] = await Promise.all([
+      const [b, t, s, ps, orders, regs, inventory, movements, recipes] = await Promise.all([
         sb.from('bookings').select('*').order('created_at', { ascending: false }),
         sb.from('tournaments').select('*').order('created_at', { ascending: false }),
         sb.from('app_settings').select('setting_key,setting_value'),
@@ -39,14 +39,16 @@
         sb.from('cafe_orders').select('*').order('created_at', { ascending: false }),
         sb.from('tournament_registrations').select('*').order('created_at'),
         sb.from('inventory_items').select('*').eq('active',true).order('category').order('name'),
-        sb.from('inventory_movements').select('*, inventory_items(name,unit)').order('created_at',{ascending:false}).limit(100)
+        sb.from('inventory_movements').select('*, inventory_items(name,unit)').order('created_at',{ascending:false}).limit(100),
+        sb.from('inventory_recipes').select('*, inventory_items(name,unit)').order('menu_name').order('id')
       ]);
-      if (b.error) throw b.error; if (t.error) throw t.error; if (s.error) throw s.error; if (orders.error) throw orders.error; if (regs.error) throw regs.error; if (inventory.error) throw inventory.error; if (movements.error) throw movements.error;
+      if (b.error) throw b.error; if (t.error) throw t.error; if (s.error) throw s.error; if (orders.error) throw orders.error; if (regs.error) throw regs.error; if (inventory.error) throw inventory.error; if (movements.error) throw movements.error; if (recipes.error) throw recipes.error;
       shared.bookings = (b.data || []).map(x => ({ id:x.id, name:x.customer_name, roomName:x.room_name, roomPrice:Number(x.room_price), date:x.booking_date, time:String(x.booking_time).slice(0,5), hours:Number(x.hours), total:Number(x.total), deposit:Number(x.deposit), paymentMethod:x.payment_method, paymentRef:x.payment_reference, status:x.status, reviewedBy:x.reviewed_by || '', createdAt:x.created_at }));
       shared.tournaments = (t.data || []).map(x => ({ id:x.id, name:x.name, game:x.game, date:x.tournament_date, rules:x.rules, prize:x.prize, format:x.format, details:x.details, capacity:x.capacity, status:x.status, participants:(regs.data||[]).filter(r=>r.tournament_id===x.id).map(r=>({id:r.id,name:r.participant_name,phone:r.phone,team:r.assigned_team})) }));
       shared.orders = orders.data || [];
       shared.inventory = inventory.data || [];
       shared.inventoryMovements = movements.data || [];
+      shared.inventoryRecipes = recipes.data || [];
       shared.settings = Object.fromEntries((s.data || []).map(x => [x.setting_key, x.setting_value]));
       if (ps.data?.state && window.xoManagerApplyState) window.xoManagerApplyState(ps.data.state); else if (window.xoManagerGetState) await this.savePos(window.xoManagerGetState());
       return shared;
@@ -130,6 +132,19 @@
       if (updateError) throw updateError;
       const { data:u } = await sb.auth.getUser();
       const { error } = await sb.from('inventory_movements').insert({item_id:id,movement_type:type,quantity:amount,before_quantity:before,after_quantity:after,note:note||null,created_by:u.user.id});
+      if (error) throw error;
+      await this.refresh();
+    },
+    async saveInventoryRecipe(menuName, itemId, quantity) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه تعديل الوصفات');
+      if (!menuName || !itemId || !(Number(quantity) > 0)) throw new Error('راجع بيانات الوصفة');
+      const { error } = await sb.from('inventory_recipes').upsert({menu_name:menuName,inventory_item_id:itemId,quantity_per_unit:Number(quantity)},{onConflict:'menu_name,inventory_item_id'});
+      if (error) throw error;
+      await this.refresh();
+    },
+    async deleteInventoryRecipe(id) {
+      if (profile?.role !== 'manager') throw new Error('المدير فقط يمكنه حذف الوصفات');
+      const { error } = await sb.from('inventory_recipes').delete().eq('id',id);
       if (error) throw error;
       await this.refresh();
     },
